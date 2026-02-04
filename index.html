@@ -396,11 +396,14 @@
             }, {});
 
             const isEntryHidden = (entry) => {
+                const entryKey = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.isLecture}~${entry.teacher}`;
                 for (const selectedEntryKey of selectedEntries) {
+                    // skip comparing the entry against itself (by key)
+                    if (selectedEntryKey === entryKey) continue;
                     const selectedEntry = allEntries.find(e => `${e.day}~${e.startTime}~${e.abbreviation}~${e.isLecture}~${e.teacher}` === selectedEntryKey);
                     if (selectedEntry) {
-                        if (entry.abbreviation === selectedEntry.abbreviation && entry.isLecture === selectedEntry.isLecture && entry !== selectedEntry) return true;
-                        if (entry.startTime === selectedEntry.startTime && entry.day === selectedEntry.day && entry !== selectedEntry) return true;
+                        if (entry.abbreviation === selectedEntry.abbreviation && entry.isLecture === selectedEntry.isLecture) return true;
+                        if (entry.startTime === selectedEntry.startTime && entry.day === selectedEntry.day) return true;
                     }
                 }
                 return false;
@@ -610,20 +613,28 @@
                         })}
                     </div>
                     {tooltip && (
-                        <div style={{
-                            position: 'fixed',
-                            top: tooltip.y + 15, // Trochu posuneme pod kurzor
-                            left: tooltip.x + 15,
-                            backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
-                            border: '1px solid #4b5563',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            zIndex: 100, // Aby bylo nad vším ostatním
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
-                            color: 'white',
-                            maxWidth: '300px',
-                            pointerEvents: 'auto' // Aby šlo kliknout na zavírací křížek
-                        }}>
+                        <>
+                            <div onClick={() => setTooltip(null)} style={{
+                                position: 'fixed',
+                                inset: 0,
+                                zIndex: 95,
+                                backgroundColor: 'transparent',
+                                cursor: 'default'
+                            }} />
+                            <div style={{
+                                position: 'fixed',
+                                top: tooltip.y + 15, // Trochu posuneme pod kurzor
+                                left: tooltip.x + 15,
+                                backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
+                                border: '1px solid #4b5563',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                zIndex: 100, // Aby bylo nad vším ostatním
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
+                                color: 'white',
+                                maxWidth: '300px',
+                                pointerEvents: 'auto' // Aby šlo kliknout na zavírací křížek
+                            }}>
                             <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
                             <div className="text-sm font-medium">{tooltip.text}</div>
 
@@ -638,6 +649,7 @@
                                 <i className="fas fa-times text-xs"></i>
                             </button>
                         </div>
+                        </>
                     )}
 
                 </div>
