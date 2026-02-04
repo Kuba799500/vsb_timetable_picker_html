@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="cs">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VSB Timetable Picker</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
+
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,7 +22,7 @@
             font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
             overflow-y: scroll;
         }
-        
+
         #root {
             max-width: 1280px;
             margin: 0 auto;
@@ -29,10 +30,23 @@
             text-align: center;
         }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #333; }
-        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #777; }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #333;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
 
         .modal-overlay {
             background-color: rgba(0, 0, 0, 0.75);
@@ -40,6 +54,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 
@@ -54,13 +69,17 @@
                     subjectScheduleTable: {
                         days: [
                             { title: "Pondělí", queues: [] },
-                            { title: "Úterý", queues: [
-                                { items: [
-                                    { used: true, duration: 2, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Demo Učitel", subjectAbbrev: "DEMO", lecture: true, concreteActivityId: 123 } },
-                                    { used: true, duration: 2, dto: { scheduleWindowBeginTime: "10:45", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Demo Cvičící", subjectAbbrev: "DEMO", lecture: false, concreteActivityId: 124 } },
-                                    { used: true, duration: 2, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Kolize", subjectAbbrev: "DEMO", lecture: false, concreteActivityId: 125 } }
-                                ]}
-                            ]},
+                            {
+                                title: "Úterý", queues: [
+                                    {
+                                        items: [
+                                            { used: true, duration: 2, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Demo Učitel", subjectAbbrev: "DEMO", lecture: true, concreteActivityId: 123 } },
+                                            { used: true, duration: 2, dto: { scheduleWindowBeginTime: "10:45", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Demo Cvičící", subjectAbbrev: "DEMO", lecture: false, concreteActivityId: 124 } },
+                                            { used: true, duration: 2, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Kolize", subjectAbbrev: "DEMO", lecture: false, concreteActivityId: 125 } }
+                                        ]
+                                    }
+                                ]
+                            },
                             { title: "Středa", queues: [] },
                             { title: "Čtvrtek", queues: [] },
                             { title: "Pátek", queues: [] }
@@ -125,7 +144,7 @@
 
             const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-	    const [tooltip, setTooltip] = useState(null);
+            const [tooltip, setTooltip] = useState(null);
 
             useEffect(() => {
                 localStorage.setItem("vsb_timetable_data", JSON.stringify(timetableData));
@@ -138,39 +157,39 @@
             ];
 
             const colors = ["bg-green-700", "bg-fuchsia-500", "bg-orange-500", "bg-yellow-500", "bg-purple-700", "bg-pink-900", "bg-indigo-500", "bg-violet-900"];
-            const subjectColors = {}; 
+            const subjectColors = {};
 
-const getCurrentTimePosition = () => {
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const TIME_SLOT_WIDTH = 74;
+            const getCurrentTimePosition = () => {
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const TIME_SLOT_WIDTH = 74;
 
-    for (let i = 0; i < timeSlots.length; i++) {
-        const [start, end] = timeSlots[i].split("-").map((t) => {
-            const [h, m] = t.split(":").map(Number);
-            return h * 60 + m;
-        });
+                for (let i = 0; i < timeSlots.length; i++) {
+                    const [start, end] = timeSlots[i].split("-").map((t) => {
+                        const [h, m] = t.split(":").map(Number);
+                        return h * 60 + m;
+                    });
 
-        if (currentMinutes < start) {
-   if (i === 0) {
-                return 1;
-            }
-            return i * TIME_SLOT_WIDTH;
-        }
+                    if (currentMinutes < start) {
+                        if (i === 0) {
+                            return 1;
+                        }
+                        return i * TIME_SLOT_WIDTH;
+                    }
 
-        if (currentMinutes >= start && currentMinutes < end) {
-            const slotProgress = (currentMinutes - start) / (end - start);
-            const position = i * TIME_SLOT_WIDTH + slotProgress * TIME_SLOT_WIDTH;
-            return position === 0 ? 1 : position;
-        }
+                    if (currentMinutes >= start && currentMinutes < end) {
+                        const slotProgress = (currentMinutes - start) / (end - start);
+                        const position = i * TIME_SLOT_WIDTH + slotProgress * TIME_SLOT_WIDTH;
+                        return position === 0 ? 1 : position;
+                    }
 
-    }
+                }
 
-    return timeSlots.length * TIME_SLOT_WIDTH;
-};
+                return timeSlots.length * TIME_SLOT_WIDTH;
+            };
 
             const [currentTimePosition, setCurrentTimePosition] = useState(getCurrentTimePosition());
-            
+
             useEffect(() => {
                 const interval = setInterval(() => {
                     setCurrentTimePosition(getCurrentTimePosition());
@@ -215,7 +234,7 @@ const getCurrentTimePosition = () => {
             };
 
             const handleDeleteAll = () => {
-                if(confirm("Opravdu smazat všechny nahrané rozvrhy?")) {
+                if (confirm("Opravdu smazat všechny nahrané rozvrhy?")) {
                     setTimetableData([]);
                     setSelectedEntries(new Set());
                     setSelectedSubjects(new Set());
@@ -226,13 +245,13 @@ const getCurrentTimePosition = () => {
 
             const handleDeleteSubject = (e, subjectName) => {
                 e.stopPropagation();
-                if(confirm(`Smazat předmět ${subjectName} a jeho data?`)) {
+                if (confirm(`Smazat předmět ${subjectName} a jeho data?`)) {
                     setTimetableData(prev => prev.filter(fileItem => {
-                             const containsSubject = fileItem.title.includes(subjectName) || 
-                                                     (fileItem.data?.subjectScheduleTable?.days || []).some(d => 
-                                                         d.queues.some(q => q.items.some(it => it.dto?.subjectAbbrev === subjectName))
-                                                     );
-                             return !containsSubject;
+                        const containsSubject = fileItem.title.includes(subjectName) ||
+                            (fileItem.data?.subjectScheduleTable?.days || []).some(d =>
+                                d.queues.some(q => q.items.some(it => it.dto?.subjectAbbrev === subjectName))
+                            );
+                        return !containsSubject;
                     }));
                     setSelectedSubjects(prev => {
                         const newSet = new Set(prev);
@@ -245,10 +264,10 @@ const getCurrentTimePosition = () => {
             // --- VÝPOČET KONCE HODINY ---
             const calculateEndTime = (startTime, duration) => {
 
-		startTime = startTime.substring(0, 5);
+                startTime = startTime.substring(0, 5);
                 // Najdeme index, kde začíná hodina (např. "09:00" -> index 2)
                 const startIndex = timeSlots.findIndex(slot => slot.startsWith(startTime));
-                
+
                 if (startIndex === -1) return "??:-1"; // Fallback pokud čas nesedí
 
                 // Spočítáme index konce
@@ -259,7 +278,7 @@ const getCurrentTimePosition = () => {
                 if (endIndex < timeSlots.length) {
                     return timeSlots[endIndex].split("-")[1]; // Vrátí část za pomlčkou
                 }
-                
+
                 // Fallback pro nestandardní časy
                 return "??:??";
             };
@@ -267,7 +286,7 @@ const getCurrentTimePosition = () => {
             // Data Processing
             const formatSchedule = (scheduleTable) => {
                 const formatted = [];
-                if(!scheduleTable || !scheduleTable.days) return [];
+                if (!scheduleTable || !scheduleTable.days) return [];
                 scheduleTable.days.forEach((day) => {
                     day.queues.forEach((queue) => {
                         queue.items.forEach((item) => {
@@ -309,14 +328,14 @@ const getCurrentTimePosition = () => {
                     return b.duration - a.duration;
                 });
 
-                const rows = []; 
+                const rows = [];
 
                 const positioned = sorted.map(entry => {
                     let rowIndex = -1;
-                    for(let r = 0; r < rows.length; r++) {
+                    for (let r = 0; r < rows.length; r++) {
                         if (entry.startTime >= rows[r]) {
                             rowIndex = r;
-                            rows[r] = entry.endTime; 
+                            rows[r] = entry.endTime;
                             break;
                         }
                     }
@@ -327,8 +346,8 @@ const getCurrentTimePosition = () => {
                     return { ...entry, visualRowIndex: rowIndex };
                 });
 
-                return { 
-                    items: positioned, 
+                return {
+                    items: positioned,
                     rowCount: Math.max(1, rows.length)
                 };
             };
@@ -354,15 +373,15 @@ const getCurrentTimePosition = () => {
 
             const groupAndFilterEntries = () => {
                 const grouped = { Pondělí: [], Úterý: [], Středa: [], Čtvrtek: [], Pátek: [] };
-                
+
                 allEntries.forEach((entry) => {
                     const key = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.isLecture}~${entry.teacher}`;
                     const isSelected = selectedEntries.has(key);
                     const isSubjectVisible = selectedSubjects.size === 0 || selectedSubjects.has(entry.abbreviation);
                     const isCollisionVisible = showUnusedClasses || !isEntryHidden(entry);
-                    
+
                     if ((isSubjectVisible && isCollisionVisible) || isSelected) {
-                        if(grouped[entry.day]) grouped[entry.day].push(entry);
+                        if (grouped[entry.day]) grouped[entry.day].push(entry);
                     }
                 });
                 return grouped;
@@ -429,7 +448,7 @@ const getCurrentTimePosition = () => {
 
             return (
                 <div className="flex-1 container mx-auto p-4 flex flex-col items-center">
-                    
+
                     <div className="absolute top-4 right-4">
                         <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2">
                             <i className="fas fa-cog"></i> Správa rozvrhů
@@ -440,7 +459,7 @@ const getCurrentTimePosition = () => {
                         <div className="flex flex-col gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Nahrát nové soubory (.json)</label>
-                                <input type="file" multiple accept=".json" onChange={handleFileUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"/>
+                                <input type="file" multiple accept=".json" onChange={handleFileUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" />
                             </div>
                             <div className="border-t border-gray-600 pt-4">
                                 <button onClick={handleDeleteAll} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2">
@@ -454,7 +473,7 @@ const getCurrentTimePosition = () => {
                         <h2 className="text-xl font-bold text-white">2. Vyberte si cvičení</h2>
                         <div className="flex gap-4">
                             <label className="inline-flex items-center cursor-pointer bg-gray-800 px-3 py-2 rounded border border-gray-700 hover:bg-gray-700 transition">
-                                <input type="checkbox" onChange={toggleUnusedClasses} checked={showUnusedClasses} className="sr-only peer"/>
+                                <input type="checkbox" onChange={toggleUnusedClasses} checked={showUnusedClasses} className="sr-only peer" />
                                 <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                 <span className="ml-3 text-sm font-medium text-gray-300">Všechny varianty</span>
                             </label>
@@ -466,31 +485,31 @@ const getCurrentTimePosition = () => {
 
                     <div className="flex flex-wrap gap-3 mb-6 w-[1106px] justify-center">
                         {Object.entries(subjectTypesMap).map(([name, types]) => (
-                        <div key={name} className="relative group">
-                            <button onClick={() => toggleSubject(name)} className={`px-4 py-3 border rounded-lg transition-all duration-200 shadow-lg ${selectedSubjects.has(name) ? "bg-gray-700 border-gray-500" : "bg-zinc-800 border-zinc-600 opacity-60 hover:opacity-100"}`}>
-                                <div className={`font-bold ${subjectColors[name]} text-white rounded mb-2 py-1 px-3 text-lg shadow-sm`}>{name}</div>
-                                <div className="flex justify-center gap-2 w-full">
-                                {types.map((type,i) => {
-                                    const isSelected = Array.from(selectedEntries).some((el) => {
-                                        const split = el.split("~");
-                                        return split[2] === name && split[3] === (type === "C" ? "false" : "true");
-                                    });
-                                    return <div key={name+type+i} className={`inline-block px-2 py-0.5 text-xs rounded font-bold border ${type === "C" ? (isSelected ? "bg-blue-600 border-blue-400 text-white" : "text-blue-400 border-blue-900") : (isSelected ? "bg-red-600 border-red-400 text-white" : "text-red-400 border-red-900")}`}>{type}</div>
-                                })}
-                                </div>
-                            </button>
-                            <button onClick={(e) => handleDeleteSubject(e, name)} className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
+                            <div key={name} className="relative group">
+                                <button onClick={() => toggleSubject(name)} className={`px-4 py-3 border rounded-lg transition-all duration-200 shadow-lg ${selectedSubjects.has(name) ? "bg-gray-700 border-gray-500" : "bg-zinc-800 border-zinc-600 opacity-60 hover:opacity-100"}`}>
+                                    <div className={`font-bold ${subjectColors[name]} text-white rounded mb-2 py-1 px-3 text-lg shadow-sm`}>{name}</div>
+                                    <div className="flex justify-center gap-2 w-full">
+                                        {types.map((type, i) => {
+                                            const isSelected = Array.from(selectedEntries).some((el) => {
+                                                const split = el.split("~");
+                                                return split[2] === name && split[3] === (type === "C" ? "false" : "true");
+                                            });
+                                            return <div key={name + type + i} className={`inline-block px-2 py-0.5 text-xs rounded font-bold border ${type === "C" ? (isSelected ? "bg-blue-600 border-blue-400 text-white" : "text-blue-400 border-blue-900") : (isSelected ? "bg-red-600 border-red-400 text-white" : "text-red-400 border-red-900")}`}>{type}</div>
+                                        })}
+                                    </div>
+                                </button>
+                                <button onClick={(e) => handleDeleteSubject(e, name)} className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
                         ))}
                     </div>
 
                     <div className="flex-col mb-1 select-none">
-                        <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{width: TABLE_WIDTH}}>
-                            <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{width: DAY_COL_WIDTH}}>Den</div>
+                        <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
+                            <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
                             {timeSlots.map((slot, index) => (
-                                <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{width: SLOT_WIDTH}}>
+                                <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{ width: SLOT_WIDTH }}>
                                     {slot.split("-").map((part, i) => <div key={i}>{part}</div>)}
                                 </div>
                             ))}
@@ -499,36 +518,36 @@ const getCurrentTimePosition = () => {
 
                     <div className="relative flex flex-col gap-1 pb-20 select-none">
                         {currentTimePosition && (
-                            <div className="absolute h-full w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)]" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px` }}/>
+                            <div className="absolute h-full w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)]" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px` }} />
                         )}
-                        
+
                         {["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek"].map((day) => {
                             const rawEntries = groupedData[day] || [];
                             const { items: positionedEntries, rowCount } = calculateLayout(rawEntries);
 
                             return (
-                                <div key={day} className="relative bg-gray-800 border-b border-gray-700 grid" 
-                                     style={{ 
-                                         width: TABLE_WIDTH,
-                                         gridTemplateColumns: `${DAY_COL_WIDTH}px repeat(${timeSlots.length}, ${SLOT_WIDTH}px)`,
-                                         gridTemplateRows: `repeat(${rowCount}, ${ROW_HEIGHT}px)` 
-                                     }}>
-                                    
+                                <div key={day} className="relative bg-gray-800 border-b border-gray-700 grid"
+                                    style={{
+                                        width: TABLE_WIDTH,
+                                        gridTemplateColumns: `${DAY_COL_WIDTH}px repeat(${timeSlots.length}, ${SLOT_WIDTH}px)`,
+                                        gridTemplateRows: `repeat(${rowCount}, ${ROW_HEIGHT}px)`
+                                    }}>
+
                                     <div className="col-start-1 flex items-center justify-center bg-sky-900 text-sky-200 font-bold text-lg border-r border-gray-600 z-10"
-                                         style={{ gridRow: `1 / span ${rowCount}` }}>
+                                        style={{ gridRow: `1 / span ${rowCount}` }}>
                                         {day.substring(0, 2)}
                                     </div>
 
                                     <div className="absolute inset-0 pointer-events-none z-0">
                                         {timeSlots.map((_, i) => (
-                                            <div key={i} className="absolute top-0 bottom-0 border-r border-gray-700/40" style={{ left: DAY_COL_WIDTH + ((i+1) * SLOT_WIDTH) }}></div>
+                                            <div key={i} className="absolute top-0 bottom-0 border-r border-gray-700/40" style={{ left: DAY_COL_WIDTH + ((i + 1) * SLOT_WIDTH) }}></div>
                                         ))}
                                     </div>
 
                                     {positionedEntries.map((subject, index) => {
                                         const key = `${subject.day}~${subject.startTime}~${subject.abbreviation}~${subject.isLecture}~${subject.teacher}`;
                                         const isSelected = selectedEntries.has(key);
-                                        const colStart = getTimeSlotIndex(subject.startTime.substring(0,5));
+                                        const colStart = getTimeSlotIndex(subject.startTime.substring(0, 5));
 
                                         return (
                                             <div
@@ -549,32 +568,32 @@ const getCurrentTimePosition = () => {
                                                     gridRow: subject.visualRowIndex + 1
                                                 }}
 
-onClick={() => {
-    if (!isEntryHidden(subject)) {
-      pickClass(subject);
-    }
-  }}
+                                                onClick={() => {
+                                                    if (!isEntryHidden(subject)) {
+                                                        pickClass(subject);
+                                                    }
+                                                }}
 
-onContextMenu={(e) => {
-    e.preventDefault();
-    setTooltip({
-      x: e.clientX,
-      y: e.clientY,
-      text: subject.teacher
-    });
-  }}
+                                                onContextMenu={(e) => {
+                                                    e.preventDefault();
+                                                    setTooltip({
+                                                        x: e.clientX,
+                                                        y: e.clientY,
+                                                        text: subject.teacherFull
+                                                    });
+                                                }}
 
 
 
                                             >
                                                 <div className="px-2 py flex flex-col h-full justify-between">
-<input
-      type="checkbox"
-      className="hidden"
-      checked={isSelected}
-      readOnly // Přidáno, aby React nekřičel, že input nemá onChange
-      disabled={isEntryHidden(subject)}
-    />                                                    <div className="flex justify-between items-start">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="hidden"
+                                                        checked={isSelected}
+                                                        readOnly // Přidáno, aby React nekřičel, že input nemá onChange
+                                                        disabled={isEntryHidden(subject)}
+                                                    />                                                    <div className="flex justify-between items-start">
                                                         <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${selectedSubjects.has(subject.abbreviation) ? "bg-red-500" : subjectColors[subject.abbreviation]}`}>
                                                             {subject.abbreviation}
                                                         </span>
@@ -591,35 +610,35 @@ onContextMenu={(e) => {
                         })}
                     </div>
                     {tooltip && (
-    <div style={{
-        position: 'fixed',
-        top: tooltip.y + 15, // Trochu posuneme pod kurzor
-        left: tooltip.x + 15,
-        backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
-        border: '1px solid #4b5563',
-        padding: '12px',
-        borderRadius: '8px',
-        zIndex: 100, // Aby bylo nad vším ostatním
-        boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
-        color: 'white',
-        maxWidth: '300px',
-        pointerEvents: 'auto' // Aby šlo kliknout na zavírací křížek
-    }}>
-        <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
-        <div className="text-sm font-medium">{tooltip.text}</div>
-        
-        {/* Tlačítko pro zavření */}
-        <button
-            onClick={(e) => {
-                e.stopPropagation(); // Aby se neprokliklo nic pod tím
-                setTooltip(null);
-            }}
-            className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
-        >
-            <i className="fas fa-times text-xs"></i>
-        </button>
-    </div>
-)}
+                        <div style={{
+                            position: 'fixed',
+                            top: tooltip.y + 15, // Trochu posuneme pod kurzor
+                            left: tooltip.x + 15,
+                            backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
+                            border: '1px solid #4b5563',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            zIndex: 100, // Aby bylo nad vším ostatním
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
+                            color: 'white',
+                            maxWidth: '300px',
+                            pointerEvents: 'auto' // Aby šlo kliknout na zavírací křížek
+                        }}>
+                            <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
+                            <div className="text-sm font-medium">{tooltip.text}</div>
+
+                            {/* Tlačítko pro zavření */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Aby se neprokliklo nic pod tím
+                                    setTooltip(null);
+                                }}
+                                className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
+                            >
+                                <i className="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    )}
 
                 </div>
             );
@@ -629,4 +648,5 @@ onContextMenu={(e) => {
         root.render(<App />);
     </script>
 </body>
+
 </html>
