@@ -24,15 +24,15 @@
         }
 
         #root {
-            max-width: 1280px;
+            max-width: 80rem;
             margin: 0 auto;
-            padding: 2rem 2rem 0rem 2rem;
+            padding-top: 2rem;
             text-align: center;
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 0.5rem;
+            height: 0.5rem;
         }
 
         ::-webkit-scrollbar-track {
@@ -41,7 +41,7 @@
 
         ::-webkit-scrollbar-thumb {
             background: #555;
-            border-radius: 4px;
+            border-radius: 0.25rem;
         }
 
         ::-webkit-scrollbar-thumb:hover {
@@ -50,7 +50,7 @@
 
         .modal-overlay {
             background-color: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(0.25rem);
         }
     </style>
 </head>
@@ -59,7 +59,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useLayoutEffect } = React;
 
         // --- DEMO DATA ---
         const DEMO_DATA = [
@@ -137,6 +137,48 @@
                 localStorage.setItem("vsb_timetable_data", JSON.stringify(timetableData));
             }, [timetableData]);
 
+            useLayoutEffect(() => {
+                if (tooltip) {
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    document.body.style.paddingRight = `${scrollbarWidth}px`;
+                    document.body.style.overflow = 'hidden';
+                    document.documentElement.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    document.documentElement.style.overflow = '';
+                }
+                return () => {
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    document.documentElement.style.overflow = '';
+                };
+            }, [tooltip]);
+
+            useEffect(() => {
+                if (tooltip && tooltip.room && !tooltip.roomUrl) {
+                    const controller = new AbortController();
+                    const fetchRoom = async () => {
+                        try {
+                            // Použijeme CORS proxy, protože API mapy.vsb.cz neumožňuje přímé volání z prohlížeče (CORS error)
+                            const targetUrl = `https://mapy.vsb.cz/maps/api/v0/rooms/autocomplete?query=${encodeURIComponent(tooltip.room)}&language=cs`;
+                            const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (Array.isArray(data) && data.length > 0) {
+                                    const id = data[0].id;
+                                    const url = `https://mapy.vsb.cz/maps/?id=${id}&type=rooms&lang=cs`;
+                                    console.log(`Fetched room URL for ${tooltip.room}: ${url}`);
+                                    setTooltip(prev => (prev && prev.room === tooltip.room ? { ...prev, roomUrl: url } : prev));
+                                }
+                            }
+                        } catch (e) { }
+                    };
+                    fetchRoom();
+                    return () => controller.abort();
+                }
+            }, [tooltip]);
+
             const timeSlots = [
                 "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
                 "11:30-12:15", "12:30-13:15", "13:15-14:00", "14:15-15:00", "15:00-15:45",
@@ -146,10 +188,33 @@
             const colors = ["bg-green-700", "bg-fuchsia-500", "bg-orange-500", "bg-yellow-500", "bg-purple-700", "bg-pink-900", "bg-indigo-500", "bg-violet-900"];
             const subjectColors = {};
 
+
+            const SLOT_MIN = 50;
+            const SLOT_MAX = 75;
+
+            const calculateSlotWidth = (viewportWidth) => {
+                const NUM_SLOTS = timeSlots.length +1
+                const idealSlotWidth = (viewportWidth-8) / NUM_SLOTS;
+                return Math.max(SLOT_MIN, Math.min(SLOT_MAX, idealSlotWidth));
+            };
+
+            const [slotWidth, setSlotWidth] = useState(() => {
+                const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
+                return calculateSlotWidth(w);
+            });
+
+            useEffect(() => {
+                const onResize = () => {
+                    setSlotWidth(calculateSlotWidth(window.innerWidth));
+                };
+                window.addEventListener('resize', onResize);
+                return () => window.removeEventListener('resize', onResize);
+            }, []);
+
             const getCurrentTimePosition = () => {
                 const now = new Date();
                 const currentMinutes = now.getHours() * 60 + now.getMinutes();
-                const TIME_SLOT_WIDTH = 74;
+                const TIME_SLOT_WIDTH = slotWidth;
 
                 for (let i = 0; i < timeSlots.length; i++) {
                     const [start, end] = timeSlots[i].split("-").map((t) => {
@@ -177,6 +242,12 @@
 
             const [currentTimePosition, setCurrentTimePosition] = useState(getCurrentTimePosition());
 
+            // Update position immediately when slot width changes (responsive resize)
+            useEffect(() => {
+                setCurrentTimePosition(getCurrentTimePosition());
+            }, [slotWidth]);
+
+            // Update position every 60 seconds for time passage
             useEffect(() => {
                 const interval = setInterval(() => {
                     setCurrentTimePosition(getCurrentTimePosition());
@@ -227,32 +298,95 @@
             };
 
             const handleDeleteAll = () => {
-                if (confirm("Opravdu smazat všechny nahrané rozvrhy?")) {
-                    setTimetableData(DEMO_DATA);
-                    setSelectedEntries(new Set());
-                    setSelectedSubjects(new Set());
-                    localStorage.removeItem("vsb_timetable_data");
-                    setIsUploadModalOpen(false);
-                }
+                // No longer shows alert; instead uses expandable button in modal
             };
+
+            // Two-step delete all: perform deletion without browser confirm
+            const performDeleteAll = () => {
+                setTimetableData(DEMO_DATA);
+                setSelectedEntries(new Set());
+                setSelectedSubjects(new Set());
+                localStorage.removeItem("vsb_timetable_data");
+                setIsUploadModalOpen(false);
+                setConfirmDeleteAll(false);
+            };
+
+            const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
             const handleDeleteSubject = (e, subjectName) => {
                 e.stopPropagation();
-                if (confirm(`Smazat předmět ${subjectName} a jeho data?`)) {
-                    setTimetableData(prev => prev.filter(fileItem => {
-                        const containsSubject = fileItem.title.includes(subjectName) ||
-                            (fileItem.data?.subjectScheduleTable?.days || []).some(d =>
-                                d.queues.some(q => q.items.some(it => it.dto?.subjectAbbrev === subjectName))
-                            );
-                        return !containsSubject;
-                    }));
-                    setSelectedSubjects(prev => {
-                        const newSet = new Set(prev);
-                        newSet.delete(subjectName);
-                        return newSet;
-                    });
-                }
+                // deprecated: kept for compatibility but no confirm here
             }
+
+            // Two-step delete: perform deletion without browser confirm
+            const performDeleteSubject = (subjectName) => {
+                setTimetableData(prev => prev.filter(fileItem => {
+                    const containsSubject = fileItem.title.includes(subjectName) ||
+                        (fileItem.data?.subjectScheduleTable?.days || []).some(d =>
+                            d.queues.some(q => q.items.some(it => it.dto?.subjectAbbrev === subjectName))
+                        );
+                    return !containsSubject;
+                }));
+                setSelectedSubjects(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(subjectName);
+                    return newSet;
+                });
+                // clear any pending confirm state
+                setConfirmDeleteSubject(null);
+            }
+
+            const [confirmDeleteSubject, setConfirmDeleteSubject] = useState(null);
+
+            // --- LONG PRESS LOGIC ---
+            const longPressTimer = useRef(null);
+            const isLongPress = useRef(false);
+            const touchStartPos = useRef({ x: 0, y: 0 });
+
+            const handleTouchStart = (e, subject) => {
+                isLongPress.current = false;
+                const touch = e.touches[0];
+                const x = touch.clientX;
+                const y = touch.clientY;
+                
+                touchStartPos.current = { x, y };
+
+                longPressTimer.current = setTimeout(() => {
+                    isLongPress.current = true;
+                    setTooltip({
+                        x: x,
+                        y: y,
+                        teacher: subject.teacherFull,
+                        room: subject.roomId,
+                        isTouch: true
+                    });
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }, 500);
+            };
+
+            const handleTouchEnd = (e) => {
+                if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                    longPressTimer.current = null;
+                }
+                if (isLongPress.current) {
+                    if (e.cancelable) e.preventDefault();
+                    setTimeout(() => { isLongPress.current = false; }, 200);
+                }
+            };
+
+            const handleTouchMove = (e) => {
+                if (longPressTimer.current) {
+                    const touch = e.touches[0];
+                    const moveX = Math.abs(touch.clientX - touchStartPos.current.x);
+                    const moveY = Math.abs(touch.clientY - touchStartPos.current.y);
+                    
+                    if (moveX > 10 || moveY > 10) {
+                        clearTimeout(longPressTimer.current);
+                        longPressTimer.current = null;
+                    }
+                }
+            };
 
             // --- VÝPOČET KONCE HODINY ---
             const calculateEndTime = (startTime, duration) => {
@@ -288,14 +422,14 @@
                                 formatted.push({
                                     day: day.title,
                                     startTime: item.dto.scheduleWindowBeginTime,
-                                    // ZDE JE ZMĚNA: Počítáme konec dynamicky
                                     endTime: calculateEndTime(item.dto.scheduleWindowBeginTime, duration),
                                     teacher: item.dto.teacherShortNamesString,
                                     teacherFull: item.dto.teacherFullNamesString,
                                     abbreviation: item.dto.subjectAbbrev,
                                     isLecture: item.dto.lecture,
                                     duration: duration,
-                                    activityId: item.dto.concreteActivityId
+                                    activityId: item.dto.concreteActivityId,
+                                    roomId: item.dto.roomFullCodesString,
                                 });
                             }
                         });
@@ -413,47 +547,68 @@
             }
 
             const groupedData = groupAndFilterEntries();
-            const DAY_COL_WIDTH = 70;
-            const SLOT_WIDTH = 74;
+            const DAY_COL_WIDTH = slotWidth - 4;
+            const SLOT_WIDTH = slotWidth;
             const ROW_HEIGHT = 60;
             const TABLE_WIDTH = DAY_COL_WIDTH + (timeSlots.length * SLOT_WIDTH);
+            const SCREEN_WIDTH = TABLE_WIDTH + 2;
+
+            const TABLE_MIN_WIDTH = (SLOT_MIN-4) + (timeSlots.length * SLOT_MIN);
 
             return (
-                <div className="flex-1 container mx-auto pt-4 pl-4 pr-4 flex flex-col items-center">
+                <div className="flex-1 w-full mx-auto pt-4 flex flex-col items-center" style={{ maxWidth: SCREEN_WIDTH }}>
 
                     <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Správa rozvrhu">
                         <div className="flex flex-col gap-6">
                             <div className="flex flex-col items-center">
                                 <label className="block text-sm font-medium text-gray-300 mb-2 text-center">Nahrát nové soubory (.json)</label>
-                                <input type="file" multiple accept=".json" onChange={handleFileUpload} className="block w-3/4 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer mx-auto" />
+                                <input id="fileInput" type="file" multiple accept=".json" onChange={handleFileUpload} className="hidden" />
+                                <label htmlFor="fileInput" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
+                                    <i className="fas fa-upload mr-2"></i> Vybrat soubory
+                                </label>
                             </div>
                             <div className="border-t border-gray-600 pt-4">
-                                <button onClick={handleDeleteAll} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2">
-                                    <i className="fas fa-trash"></i> Smazat vše a resetovat
+                                <button
+                                    onClick={() => {
+                                        if (confirmDeleteAll) {
+                                            performDeleteAll();
+                                        } else {
+                                            setConfirmDeleteAll(true);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (confirmDeleteAll) setConfirmDeleteAll(false);
+                                    }}
+                                    className={`w-full text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2 transition-all duration-150 ${confirmDeleteAll ? 'bg-red-800' : 'bg-red-600 hover:bg-red-700'}`}
+                                >
+                                    {confirmDeleteAll ? (
+                                        <><i className="fas fa-trash"></i>Opravdu chcete vše smazat a resetovat?</>
+                                    ) : (
+                                        <><i className="fas fa-trash"></i> Smazat vše a resetovat</>
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </Modal>
 
-                    <div className="mb-8 w-[1106px] flex justify-between items-center mt-2">
-                        <h1 className="text-2xl font-bold text-white">VŠB Timetable Picker (HTML)</h1>
-                        <div className="flex gap-4">
-                            <label className="inline-flex items-center cursor-pointer bg-gray-800 px-3 py-2 rounded border border-gray-700 hover:bg-gray-700 transition">
+                    <div className="mb-8 mt-2 px-5 w-full flex flex-col gap-3 items-center">
+                        <h1 className="text-2xl font-bold text-white w-full text-center">VŠB Timetable Picker (HTML)</h1>
+                        <div className="flex flex-wrap gap-4 items-center w-full justify-center">
+                            <label className="inline-flex items-center cursor-pointer bg-gray-800 px-3 py-2 rounded border border-gray-700 hover:bg-gray-700 transition flex-shrink-0">
                                 <input type="checkbox" onChange={toggleUnusedClasses} checked={showUnusedClasses} className="sr-only peer" />
                                 <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                                <span className="ml-3 text-sm font-medium text-gray-300">Zobrazit skryté hodiny</span>
+                                <span className="ml-3 text-sm font-medium text-gray-300 text-nowrap">Zobrazit skryté hodiny</span>
                             </label>
-                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2">
-                                <i className="fas fa-cog"></i> Správa rozvrhu
+                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-nowrap font-bold py-2 px-4 rounded shadow flex items-center gap-2 flex-shrink-0">
+                                <i className="fas fa-cog flex-[0 0 auto]"></i><span className="flex-1 text-center">Správa rozvrhu</span>
                             </button>
-
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 mb-6 w-[1106px] justify-center">
+                    <div className="mb-6 px-5 flex flex-wrap gap-3 w-full justify-center">
                         {Object.entries(subjectTypesMap).map(([name, types]) => (
                             <div key={name} className="relative group">
-                                <button onClick={() => toggleSubject(name)} className={`px-4 py-3 border rounded-lg transition-all duration-200 shadow-lg ${selectedSubjects.has(name) ? "bg-gray-700 border-gray-500" : "bg-zinc-800 border-zinc-600 opacity-60 hover:opacity-100"}`}>
+                                <button onClick={() => toggleSubject(name)} className={`px-4 py-3 border rounded-lg transition-all duration-200 shadow-lg ${selectedSubjects.has(name) ? "bg-gray-700 border-gray-500" : "bg-zinc-800 border-zinc-600 opacity-60 [@media(hover:hover)]:hover:opacity-100"}`}>
                                     <div className={`font-bold ${subjectColors[name]} text-white rounded mb-2 py-1 px-3 text-lg shadow-sm`}>{name}</div>
                                     <div className="flex justify-center gap-2 w-full">
                                         {types.map((type, i) => {
@@ -465,25 +620,40 @@
                                         })}
                                     </div>
                                 </button>
-                                <button onClick={(e) => handleDeleteSubject(e, name)} className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <i className="fas fa-times"></i>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirmDeleteSubject === name) {
+                                            performDeleteSubject(name);
+                                        } else {
+                                            setConfirmDeleteSubject(name);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        // collapse confirmation when mouse leaves the button
+                                        if (confirmDeleteSubject === name) setConfirmDeleteSubject(null);
+                                    }}
+                                    className={`absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center shadow-md text-xs transition-all duration-150 ${confirmDeleteSubject === name ? 'px-3 py-1 rounded-full w-auto opacity-100' : `w-6 h-6 ${selectedSubjects.has(name) ? 'opacity-100' : 'opacity-0 [@media(hover:hover)]:group-hover:opacity-100'}`}`}>
+                                    {confirmDeleteSubject === name ? 'Smazat?' : <i className="fas fa-times"></i>}
                                 </button>
                             </div>
                         ))}
                     </div>
 
-                    <div className="flex-col mb-1 select-none">
-                        <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
-                            <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
-                            {timeSlots.map((slot, index) => (
-                                <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{ width: SLOT_WIDTH }}>
-                                    {slot.split("-").map((part, i) => <div key={i}>{part}</div>)}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    
 
-                    <div className="relative flex flex-col gap-1 pb-14 select-none">
+                    <div className="w-full overflow-x-auto">
+                        <div style={{ minWidth: TABLE_WIDTH === TABLE_MIN_WIDTH ? TABLE_WIDTH + 20 : TABLE_WIDTH }}>
+                            <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
+                                <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
+                                {timeSlots.map((slot, index) => (
+                                    <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{ width: SLOT_WIDTH }}>
+                                        {slot.split("-").map((part, i) => <div key={i}>{part}</div>)}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>    
+                            <div className="relative flex flex-col gap-1 pb-14 select-none" style={{ minWidth: TABLE_WIDTH }}>
                         {currentTimePosition && (
                             <div className="absolute h-full w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)]" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px` }} />
                         )}
@@ -535,7 +705,8 @@
                                                     gridRow: subject.visualRowIndex + 1
                                                 }}
 
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    if (isLongPress.current) return;
                                                     if (!isEntryHidden(subject)) {
                                                         pickClass(subject);
                                                     }
@@ -546,10 +717,15 @@
                                                     setTooltip({
                                                         x: e.clientX,
                                                         y: e.clientY,
-                                                        text: subject.teacherFull
+                                                        teacher: subject.teacherFull,
+                                                        room: subject.roomId,
+                                                        isTouch: false
                                                     });
                                                 }}
 
+                                                onTouchStart={(e) => handleTouchStart(e, subject)}
+                                                onTouchEnd={handleTouchEnd}
+                                                onTouchMove={handleTouchMove}
 
 
                                             >
@@ -576,6 +752,7 @@
                                 </div>
                             );
                         })}
+                        </div>
                     </div>
                     {tooltip && (
                         <>
@@ -584,12 +761,14 @@
                                 inset: 0,
                                 zIndex: 95,
                                 backgroundColor: '#00000022',
-                                cursor: 'default'
+                                cursor: 'default',
+                                touchAction: 'none'
                             }} />
                             <div style={{
                                 position: 'fixed',
                                 top: tooltip.y + 15, // Trochu posuneme pod kurzor
-                                left: tooltip.x + 15,
+                                left: tooltip.isTouch ? tooltip.x : tooltip.x + 15,
+                                transform: tooltip.isTouch ? 'translateX(-50%)' : 'none',
                                 backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
                                 border: '1px solid #4b5563',
                                 padding: '12px',
@@ -598,10 +777,21 @@
                                 boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
                                 color: 'white',
                                 maxWidth: '300px',
-                                pointerEvents: 'auto' // Aby šlo kliknout na zavírací křížek
+                                pointerEvents: 'auto', // Aby šlo kliknout na zavírací křížek
+                                touchAction: 'none'
                             }}>
                             <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
-                            <div className="text-sm font-medium">{tooltip.text}</div>
+                            <div className="text-sm font-medium">{tooltip.teacher}</div>
+                            
+                            <div className="font-bold text-xs text-gray-400 mt-3 mb-1 uppercase tracking-wider">Místnost</div>
+                            <div className="text-sm font-medium">
+                                {tooltip.roomUrl ? (
+                                    <a href={tooltip.roomUrl} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
+                                        {tooltip.room} <i className="fas fa-external-link-alt text-[10px] ml-1 opacity-70"></i>
+                                    </a>
+                                ) : tooltip.room}
+                            </div>
+
 
                             {/* Tlačítko pro zavření */}
                             <button
@@ -617,12 +807,15 @@
                         </>
                     )}
 
+
+                    <span class="text-xs text-gray-400">forked by <a class="underline" href="https://instagram.com/kuba.799">JJZ</a></span>
+
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(React.createElement(App));
     </script>
 </body>
 
