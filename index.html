@@ -52,6 +52,15 @@
             background-color: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(0.25rem);
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
     </style>
 </head>
 
@@ -123,7 +132,7 @@
                                     },
                                     {
                                         items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zobraz. skrytých ⓘ", teacherFullNamesString: "Pro odkrytí klikněte na přepínač pod nadpisem stránky. Zobrazí se vám všechny hodiny, které kolidují s vybranou hodinou, nebo ostatní hodiny z vybraného předmětu.", subjectAbbrev: "KOLIZE", lecture: false, concreteActivityId: 202, roomFullCodesString: "" } }
+                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zobraz. skrytých ⓘ", teacherFullNamesString: "Pro odkrytí klikněte na přepínač pod nadpisem stránky. Zobrazí se vám všechny hodiny, které kolidují se zvolenou hodinou, nebo ostatní hodiny z vybraného předmětu.", subjectAbbrev: "KOLIZE", lecture: false, concreteActivityId: 202, roomFullCodesString: "" } }
                                         ]
                                     }
                                 ]
@@ -142,7 +151,7 @@
                                 queues: [
                                     {
                                         items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "13:15", scheduleWindowEndTime: "15:00", teacherShortNamesString: "Smazat předmět ⓘ", teacherFullNamesString: "Při najetí na předmět v nabídce nahoře se vám ukáže křížek. Tím můžete předmět smazat (nebojte, můžete ho pak znovu nahrát)", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 301, roomFullCodesString: "" } }
+                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Reset ⓘ", teacherFullNamesString: "Pokud byste chtěli znovu zobrazit DEMO nebo smazat nahrané předměty, můžete využít tlačítko \"Smazat vše a resetovat\" v menu Správa rozvrhu.", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 302, roomFullCodesString: "" } }
                                         ]
                                     }
                                 ]
@@ -152,7 +161,7 @@
                                 queues: [
                                     {
                                         items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Reset ⓘ", teacherFullNamesString: "Pokud byste chtěli znovu zobrazit DEMO nebo nahrát jiné předměty, můžete využít tlačítko \"Smazat vše a resetovat\" v menu Správa rozvrhu.", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 302, roomFullCodesString: "" } }
+                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Smazat předmět ⓘ", teacherFullNamesString: "Při najetí na předmět v nabídce nahoře se vám ukáže křížek. Tím můžete předmět smazat (nebojte, můžete ho pak znovu nahrát)", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 301, roomFullCodesString: "" } }
                                         ]
                                     }
                                 ]
@@ -216,7 +225,7 @@
                         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
                             <i className="fas fa-times text-xl"></i>
                         </button>
-                        <h2 className="text-2xl font-bold mb-4 text-white">{title}</h2>
+                        <h2 className="text-2xl font-bold mb-3 text-white">{title}</h2>
                         {children}
                     </div>
                 </div>
@@ -251,6 +260,21 @@
             const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
             const [tooltip, setTooltip] = useState(null);
+            const [isClosing, setIsClosing] = useState(false);
+
+            const closeTooltip = (e) => {
+                if (e) e.stopPropagation();
+                setIsClosing(true);
+                setTimeout(() => {
+                    setTooltip(null);
+                    setIsClosing(false);
+                }, 100);
+            };
+
+            // Reset stavu zavírání při otevření nového tooltipu
+            useEffect(() => {
+                if (tooltip) setIsClosing(false);
+            }, [tooltip]);
 
             useEffect(() => {
                 localStorage.setItem("vsb_timetable_data", JSON.stringify(timetableData));
@@ -416,18 +440,20 @@
                 });
             };
 
-            const handleDeleteAll = () => {
-                // No longer shows alert; instead uses expandable button in modal
-            };
-
             // Two-step delete all: perform deletion without browser confirm
             const performDeleteAll = () => {
-                setTimetableData(DEMO_DATA);
+                // Pokud jsou aktuální data prázdná, načteme DEMO. Jinak je vymažeme.
+                if (timetableData.length === 0) {
+                    setTimetableData(DEMO_DATA);
+                } else {
+                    setTimetableData([]);
+                }
                 setSelectedEntries(new Set());
                 setSelectedSubjects(new Set());
-                localStorage.removeItem("vsb_timetable_data");
                 setIsUploadModalOpen(false);
                 setConfirmDeleteAll(false);
+                setShowUnusedClasses(false);
+                localStorage.setItem("showUnusedClasses", false);
             };
 
             const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
@@ -461,6 +487,31 @@
             const longPressTimer = useRef(null);
             const isLongPress = useRef(false);
             const touchStartPos = useRef({ x: 0, y: 0 });
+            const tooltipRef = useRef(null);
+
+            // Výpočet pozice tooltipu podle jeho skutečné výšky
+            useLayoutEffect(() => {
+                if (tooltip && tooltipRef.current) {
+                    const updatePosition = () => {
+                        const el = tooltipRef.current;
+                        if (!el) return;
+
+                        const height = el.offsetHeight;
+                        const gap = 15; // Mezera od kurzoru
+
+                       if (tooltip.y + height + gap > window.innerHeight) {
+                           el.style.top = `${window.innerHeight - height - 10}px`;
+                        } else {
+                            el.style.top = `${tooltip.y + gap}px`;
+                        }
+                    };
+
+                    updatePosition();
+                    // iOS fix: Přepočítat ještě jednou v dalším frame, kdyby se výška změnila po vykreslení
+                    const rafId = requestAnimationFrame(updatePosition);
+                    return () => cancelAnimationFrame(rafId);
+                }
+            }, [tooltip]);
 
             const handleTouchStart = (e, subject) => {
                 isLongPress.current = false;
@@ -669,7 +720,7 @@
             const SLOT_WIDTH = slotWidth;
             const ROW_HEIGHT = 60;
             const TABLE_WIDTH = DAY_COL_WIDTH + (timeSlots.length * SLOT_WIDTH);
-            const SCREEN_WIDTH = TABLE_WIDTH + 2;
+            const SCREEN_WIDTH = TABLE_WIDTH + 4;
 
             const TABLE_MIN_WIDTH = (SLOT_MIN-4) + (timeSlots.length * SLOT_MIN);
 
@@ -679,11 +730,21 @@
                     <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Správa rozvrhu">
                         <div className="flex flex-col gap-6">
                             <div className="flex flex-col items-center">
-                                <label className="block text-sm font-medium text-gray-300 mb-2 text-center">Nahrát nové soubory (.json)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-2 text-center">Nahráním souborů přepíšete DEMO.<br></br>Soubory poté můžete nahrávat jednotlivě, nebo všechny naráz.</label>
+
+                                <label className="block text-sm font-medium text-gray-300 mb-5 text-center">
+                                    <a class="text-blue-400 hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-300" target="_blank" href="https://github.com/Kuba799500/vsb_timetable_picker_html">Nápověda</a>
+                                    <br></br>
+                                    <i className="fa-solid fa-arrow-turn-up rotate-90 mr-1.5"></i>jak získám soubory mých předmětů?
+                                </label>
+
                                 <input id="fileInput" type="file" multiple accept=".json" onChange={handleFileUpload} className="hidden" />
                                 <label htmlFor="fileInput" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
-                                    <i className="fas fa-upload mr-2"></i> Vybrat soubory
+                                    <i className="fas fa-upload mr-2"></i>Vybrat soubory
                                 </label>
+
+                                <label className="block text-xs font-medium text-gray-400 mt-3 text-center">Nahrané soubory se uloží do paměti prohlížeče.</label>
+
                             </div>
                             <div className="border-t border-gray-600 pt-4">
                                 <button
@@ -874,19 +935,20 @@
                     </div>
                     {tooltip && (
                         <>
-                            <div onClick={() => setTooltip(null)} style={{
+                            <div onClick={closeTooltip} style={{
                                 position: 'fixed',
                                 inset: 0,
                                 zIndex: 95,
                                 backgroundColor: '#00000022',
                                 cursor: 'default',
-                                touchAction: 'none'
+                                touchAction: 'none',
+                                backdropFilter: 'blur(0.5px)',
+                                WebkitBackdropFilter: 'blur(0.5px)',
+                                animation: isClosing ? 'fadeOut 0.1s ease-out forwards' : 'fadeIn 0.2s ease-out forwards'
                             }} />
-                            <div style={{
+                            <div ref={tooltipRef} style={{
                                 position: 'fixed',
-                                top: tooltip.y + 15, // Trochu posuneme pod kurzor
-                                left: tooltip.isTouch ? tooltip.x : tooltip.x + 15,
-                                transform: tooltip.isTouch ? 'translateX(-50%)' : 'none',
+                                left: Math.max(10, Math.min(tooltip.isTouch ? tooltip.x - 150 : tooltip.x + 15, window.innerWidth - 310)),
                                 backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
                                 border: '1px solid #4b5563',
                                 padding: '12px',
@@ -894,9 +956,10 @@
                                 zIndex: 100, // Aby bylo nad vším ostatním
                                 boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
                                 color: 'white',
-                                maxWidth: '300px',
+                                width: '300px',
                                 pointerEvents: 'auto', // Aby šlo kliknout na zavírací křížek
-                                touchAction: 'none'
+                                touchAction: 'none',
+                                animation: isClosing ? 'fadeOut 0.1s ease-out forwards' : 'fadeIn 0.2s ease-out forwards'
                             }}>
                             <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
                             <div className="text-sm font-medium">{tooltip.teacher}</div>
@@ -913,10 +976,7 @@
 
                             {/* Tlačítko pro zavření */}
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation(); // Aby se neprokliklo nic pod tím
-                                    setTooltip(null);
-                                }}
+                                onClick={closeTooltip}
                                 className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
                             >
                                 <i className="fas fa-times text-xs"></i>
@@ -926,7 +986,7 @@
                     )}
 
 
-                    <div class="text-xs text-gray-400">forked and vibe coded by <a class="underline" href="https://instagram.com/kuba.799">JJZ</a><br>4.2.2026 9am 🌄 - 5.2.2026 4am ☕️</div>
+                    <div class="text-xs text-gray-400">forked and vibe coded by <a class="underline" href="https://instagram.com/kuba.799">JJZ</a><br></br>4.2.2026 9am 🌄 - 5.2.2026 4am ☕️<br></br>5.2.2026 1pm ☀️ - 5.2.2026 5pm 🌆</div>
 
                 </div>
             );

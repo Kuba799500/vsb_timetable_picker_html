@@ -1,42 +1,12 @@
-# Rozvrh - Výběr Předmětů
+# ROZVRH - VÝBĚR PŘEDMĚTŮ 
 
-[Github pages demo](https://rarach28.github.io/vsb_timetable_picker/)
+[OTEVŘÍT TIMETABLE PICKER](https://kuba799500.github.io/vsb_timetable_picker_html/)
 
 Tento projekt umožňuje interaktivní výběr a zobrazení rozvrhu. Data rozvrhu jsou načítána z JSON souborů, které obsahují odpovědi API z Edisonu pro každý předmět.
 
 ## Popis
 
 Aplikace zobrazuje rozvrh formou tabulky s dny v týdnu a časovými sloty. Uživatel si může vybrat jednotlivé hodiny (předměty) a zobrazit tak pouze ty, které ho zajímají. K dispozici je i filtrování podle názvu předmětu.
-
-## Technologie
-
-*   **React:** Frontend framework pro uživatelské rozhraní.
-*   **Tailwind CSS:** CSS framework pro stylování.
-
-## Instalace
-
-1.  Naklonujte repozitář:
-    ```bash
-    git clone https://github.com/Rarach28/vsb_timetable_picker.git
-    cd vsb_timetable_picker
-    ```
-
-2.  Nainstalujte závislosti:
-    ```bash
-    npm install
-    ```
-
-3.  Spusťte vývojový server:
-    ```bash
-    npm run dev
-    ```
-
-## Struktura projektu
-
-*   `src/App.js`: Hlavní komponenta aplikace, která řídí stav a renderování.
-*   `src/assets/config/*.json`: Soubory s daty rozvrhu. Každý soubor obsahuje data pro jeden předmět ve formátu JSON, získané z Edison API.
-*   `public/index.html`: Hlavní HTML soubor aplikace.
-*   `package.json`: Soubor s metadaty projektu a závislostmi.
 
 ## Použití
 
@@ -45,16 +15,25 @@ Aplikace zobrazuje rozvrh formou tabulky s dny v týdnu a časovými sloty. Uži
 3.  Kliknutím na konkrétní hodinu v rozvrhu se tato hodina vybere/odznačí. Vybrané hodiny jsou zvýrazněny.
 4.  Rozvrh se automaticky filtruje podle vybraných předmětů a hodin.
 
-## Úprava
+## ZÍSKÁNÍ JSON SOUBORŮ PŘEDMĚTŮ MANUÁLNĚ
 
 1. Přihlaste se do Edisonu a přejděte do Rozvrh > Volba rozvrhu
-2. V dev tools (`Cmd + Option + I` / `Ctrl + Shift + I`) najděte 9. `display:none` a element zobrazte
-3. Přepněte se do karty Network a nechte si ji otevřenou
-4. Klikněte na předmět jehož data chcete načíst a Response si zkopírujte a uložte zde do nového souboru `src/assets/config/NAZEVPŘEDMĚTU.json`
+2. Otevřete nástroje pro vývojáře (`Cmd + Option + I` / `Ctrl + Shift + I`)
+3. vyhledejte **"specialGray"**. Jedná se o tabulku `<table class="...specialGray" style="display:none"...`
+4. Zde změňte "display:none" na **"display:table"**.
+5. Ve vývojářských nástrojích se nahoře přepněte do karty Network (Síť) a nechte si ji otevřenou.
+6. Na stránce (vlevo) klikněte na předmět jehož data chcete načíst. Ve vývojářském okně se v seznamu na konci zobrazí nová položka (název `???`).
+7. Klikněte na ni pravým tlačítkem, zvolte "Uložit jako"/"Save file".
+8. Doporučuji vytvořit si novou složku a zde všechny .json soubory předmětů uložit.
+9. Opakujte kroky 6-7 a uložte všechny předměty.
+10. Otevřete [TIMETABLE PICKER](https://kuba799500.github.io/vsb_timetable_picker_html/)
+    *pokud chcete prozkoumat, co všechno aplikace umí, tak ještě soubory nenahrávejte a zobrazte si všechna políčka*
+11. Klikněte na tlačítko "Správa rozvrhu" a všechny uložené soubory předmětů nahrajte. Nahráním vašich souborů se DEMO automaticky smaže.
+
 
 ## Formát JSON souborů s rozvrhem
 
-Každý JSON soubor ve složce `src/assets/config/` by měl obsahovat data o jednom předmětu ve formátu, který odpovídá struktuře, jakou vrací Edison 'API'. Příklad:
+Každý uložený JSON soubor by měl obsahovat data o jednom předmětu ve formátu, který odpovídá struktuře, jakou vrací Edison 'API'. Příklad:
 
 ```json
 {
@@ -85,3 +64,14 @@ Každý JSON soubor ve složce `src/assets/config/` by měl obsahovat data o jed
     ]
   }
 }
+```
+
+
+## Nápověda
+
+Nenašli jste, co jste hledali?
+Není vám jasné jak aplikaci ovládat?
+Něco nefunguje?
+Máte nápad na zlepšení?
+
+Napište mi [do Issues](https://github.com/kuba799500/vsb_timetable_picker_html/issues)!
