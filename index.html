@@ -304,8 +304,9 @@
                     const fetchRoom = async () => {
                         try {
                             // Použijeme CORS proxy, protože API mapy.vsb.cz neumožňuje přímé volání z prohlížeče (CORS error)
+                            // Přímé volání API mapy.vsb.cz
                             const targetUrl = `https://mapy.vsb.cz/maps/api/v0/rooms/autocomplete?query=${encodeURIComponent(tooltip.room)}&language=cs`;
-                            const res = await fetch(`https://cors.eu.org/${targetUrl}`, { signal: controller.signal });
+                            const res = await fetch(targetUrl, { signal: controller.signal });
                             if (res.ok) {
                                 const data = await res.json();
                                 if (Array.isArray(data) && data.length > 0) {
