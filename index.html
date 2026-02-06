@@ -60,6 +60,22 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes modalOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .shake {
+            animation: shake 0.2s ease-in-out 0s 2;
+        }
 
     </style>
 </head>
@@ -68,6 +84,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        window.name = "vsb_timetable_picker_win";
         const { useState, useEffect, useRef, useLayoutEffect } = React;
 
         // --- DEMO DATA ---
@@ -218,10 +235,48 @@
         ];
 
         const Modal = ({ isOpen, onClose, children, title }) => {
-            if (!isOpen) return null;
+            const [shouldRender, setShouldRender] = useState(isOpen);
+
+            useEffect(() => {
+                if (isOpen) {
+                    setShouldRender(true);
+                } else {
+                    const timer = setTimeout(() => setShouldRender(false), 100);
+                    return () => clearTimeout(timer);
+                }
+            }, [isOpen]);
+
+            useEffect(() => {
+                if (shouldRender) {
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    const scrollY = window.scrollY;
+                    document.body.style.position = 'fixed';
+                    document.body.style.top = `-${scrollY}px`;
+                    document.body.style.width = '100%';
+                    document.body.style.overflow = 'hidden';
+                    document.body.style.paddingRight = `${scrollbarWidth}px`;
+                }
+                return () => {
+                    if (shouldRender) {
+                        const scrollY = document.body.style.top;
+                        document.body.style.position = '';
+                        document.body.style.top = '';
+                        document.body.style.width = '';
+                        document.body.style.overflow = '';
+                        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+                        document.body.style.paddingRight = '';
+                    }
+                };
+            }, [shouldRender]);
+
+            if (!shouldRender) return null;
+
+            const overlayStyle = { animation: isOpen ? 'fadeIn 0.2s ease-out forwards' : 'fadeOut 0.1s ease-out forwards' };
+            const modalStyle = { animation: isOpen ? 'modalIn 0.2s ease-out forwards' : 'modalOut 0.1s ease-in forwards' };
+
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay p-4" onClick={onClose}>
-                    <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 w-full max-w-lg p-6 relative" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay p-4" onClick={onClose} style={overlayStyle}>
+                    <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()} style={modalStyle}>
                         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
                             <i className="fas fa-times text-xl"></i>
                         </button>
@@ -229,6 +284,41 @@
                         {children}
                     </div>
                 </div>
+            );
+        };
+
+        const Notification = ({ message, type, onClose }) => {
+            const [isClosing, setIsClosing] = useState(false);
+
+            const closeWithAnimation = () => {
+                setIsClosing(true);
+                setTimeout(onClose, 200);
+            };
+
+            useEffect(() => {
+                if (type === 'success' || type === 'error') {
+                    const timer = setTimeout(closeWithAnimation, 5000);
+                    return () => clearTimeout(timer);
+                }
+            }, [type, onClose]);
+
+            const overlayStyle = { animation: isClosing ? 'fadeOut 0.2s ease-out forwards' : 'fadeIn 0.2s ease-out forwards' };
+            const modalStyle = { animation: isClosing ? 'modalOut 0.2s ease-in forwards' : 'modalIn 0.2s ease-out forwards' };
+
+            return ReactDOM.createPortal(
+                <div className="fixed inset-0 z-[110] flex items-center justify-center pointer-events-none">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" style={overlayStyle}></div>
+                    <div className="bg-gray-800 border border-gray-600 shadow-2xl rounded-lg p-6 flex flex-col items-center gap-4 pointer-events-auto relative min-w-[250px]" style={modalStyle}>
+                        {type === 'loading' && <i className="fas fa-circle-notch fa-spin text-4xl text-blue-500"></i>}
+                        {type === 'success' && <i className="fas fa-check-circle text-4xl text-green-500"></i>}
+                        {type === 'error' && <i className="fas fa-exclamation-circle text-4xl text-red-500"></i>}
+                        <div className="text-white font-medium text-lg text-center whitespace-pre-line">{message}</div>
+                        {type !== 'loading' && (
+                            <button onClick={closeWithAnimation} className="mt-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-full transition-colors font-semibold text-sm">Zavřít</button>
+                        )}
+                    </div>
+                </div>,
+                document.body
             );
         };
 
@@ -261,6 +351,60 @@
 
             const [tooltip, setTooltip] = useState(null);
             const [isClosing, setIsClosing] = useState(false);
+            const [notification, setNotification] = useState(null);
+            const [copyStatus, setCopyStatus] = useState(null);
+
+            const [isTouchDevice, setIsTouchDevice] = useState(false);
+            useEffect(() => {
+                setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+            }, []);
+
+            // --- BOOKMARKLET CODE ---
+            // Minifikovaná verze skriptu pro získání dat z Edisonu
+            const bookmarkletCode = `javascript:(async()=>{const e="https://curly-couscous-xxvrqqvgq5w3vv95-8000.app.github.dev",t="https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu";if(!location.href.startsWith(t))return window.open(t,"_blank");let n;try{n=document.createElement("div"),n.style.cssText="position:fixed;top:20px;right:20px;background:red;color:white;padding:15px;z-index:9999;font-size:20px;border-radius:5px;box-shadow:0 0 10px rgba(0,0,0,0.5);",n.textContent="Stahování dat...",document.body.appendChild(n);const o=Array.from(document.querySelectorAll("a")).filter(e=>"Zvolit"===e.title||"Zvolit"===e.textContent.trim()).map(e=>{const t=e.getAttribute("onclick")||"",n=t.match(/([A-Za-z0-9_]+)_selectStudyYearObligation\\s*\\(\\s*(\\d+)\\s*\\)/),o=n?n[2]:e.href.match(/EselectStudyYearObligationId!(\\d+)/)?.[1];let r=n?n[1]:null;return r&&!r.endsWith("_")&&(r+="_"),o?{id:o,portletId:r}:null}).filter(Boolean);if(!o.length)return n.textContent="Nebyly nalezeny žádné předměty.",void setTimeout(()=>n.remove(),3e3);let r=window.open("","vsb_timetable_picker_win");if(r){try{"about:blank"===r.location.href&&(r.location.href=e)}catch(e){}try{r.postMessage({type:"VSB_DOWNLOAD_STARTED",count:o.length},e)}catch(e){}}const a=t=>{t.data?.type==="VSB_CLIENT_READY"&&r&&r.postMessage({type:"VSB_DOWNLOAD_STARTED",count:o.length},e)};window.addEventListener("message",a);const s={};for(const{id:t,portletId:r}of o){n.textContent=\`Stahování dat... (\${Object.keys(s).length+1}/\${o.length})\`;try{const o=await fetch(\`/wps/.cz.vsb.edison.edu.study.pass.portlet/jaxrs/scheduleSelection/selectStudyYearObligation/\${t}\`,{method:"PUT",headers:{"Content-Type":"application/x-www-form-urlencoded","X-Requested-With":"XMLHttpRequest",Accept:"application/json"},body:new URLSearchParams({portletId:r||""})});s[t]=o.ok?await o.json():{error:"http",status:o.status}}catch(e){s[t]={error:"fetch",message:String(e)}}await new Promise(e=>setTimeout(e,150))}window.removeEventListener("message",a),r&&r.focus();if(r&&!r.closed){const t=()=>{try{r.postMessage({type:"VSB_SCHEDULE_DATA",payload:s},e),r.focus(),window.close(),n.remove()}catch(e){n.textContent="Chyba při odesílání dat.",setTimeout(()=>n.remove(),3e3)}};let o=!1;const i=e=>{e.data?.type==="VSB_CLIENT_READY"&&(o||(o=!0,window.removeEventListener("message",i),t()))};window.addEventListener("message",i);try{r.postMessage({type:"VSB_PING"},e)}catch(e){}setTimeout(()=>{o||(o=!0,window.removeEventListener("message",i),t())},2500)}else{const e=Object.keys(s);if(n.remove(),e.length>0&&confirm(\`Nezdařilo se přesměrování zpět na Timetable.\\nSoubory nahrajte ručně přes nabídku "Správa rozvrhu" -> "Vybrat soubory".\\n\\nChcete stáhnout \${e.length} souborů?\`))for(const t of e){const o=s[t]?.subjectScheduleTable?.days?.flatMap(e=>e.queues||[])?.flatMap(e=>e.items||[])?.find(e=>e.dto?.subjectAbbrev)?.dto?.subjectAbbrev,r=document.createElement("a");r.href=URL.createObjectURL(new Blob([JSON.stringify(s[t],null,2)],{type:"application/json"})),r.download=o?\`\${t}-\${o}.json\`:\`subject_\${t}.json\`,document.body.appendChild(r),r.click(),r.remove(),await new Promise(e=>setTimeout(e,500))}}}catch(e){console.error(e),n?(document.body.appendChild(n),n.textContent="Chyba: "+e.message,setTimeout(()=>n.remove(),4e3)):alert("Chyba: "+e.message)}})();`;
+
+            useEffect(() => {
+                const handleMessage = (event) => {
+                    // Bezpečnostní kontrola: přijímáme zprávy pouze z Edisonu
+                    if (event.origin !== "https://edison.sso.vsb.cz") return;
+
+                    if (event.data && event.data.type === 'VSB_SCHEDULE_DATA') {
+                        const results = event.data.payload;
+                        // Převedeme objekt {id: json} na pole [{title, data}]
+                        processImportedData(results);
+                    }
+
+                    if (event.data && event.data.type === 'VSB_PING') {
+                        event.source.postMessage({ type: "VSB_CLIENT_READY" }, event.origin);
+                    }
+
+                    if (event.data && event.data.type === 'VSB_DOWNLOAD_STARTED') {
+                        setNotification({ 
+                            message: `Stahování ${event.data.count} předmětů z Edisonu...`, 
+                            type: "loading" 
+                        });
+                    }
+                };
+                window.addEventListener("message", handleMessage);
+
+                // Odeslání signálu, že jsme připraveni (pro urychlení načítání)
+                if (window.opener) {
+                    window.opener.postMessage({ type: "VSB_CLIENT_READY" }, "https://edison.sso.vsb.cz");
+                }
+
+                return () => window.removeEventListener("message", handleMessage);
+            }, []);
+            
+            const copyToClipboard = () => {
+                navigator.clipboard.writeText(bookmarkletCode).then(() => {
+                    setCopyStatus('success');
+                    setTimeout(() => setCopyStatus(null), 3000);
+                }).catch(err => {
+                    console.error(err);
+                    setCopyStatus('error');
+                    setTimeout(() => setCopyStatus(null), 3000);
+                });
+            };
 
             const closeTooltip = (e) => {
                 if (e) e.stopPropagation();
@@ -405,6 +549,45 @@
             useEffect(() => {
                 localStorage.setItem("selectedSubjects", JSON.stringify(Array.from(selectedSubjects)));
             }, [selectedSubjects]);
+
+            const processImportedData = (results) => {
+                setNotification({ message: "Zpracovávání dat...", type: "loading" });
+
+                setTimeout(() => {
+                    const parsedData = [];
+                    
+                    Object.entries(results).forEach(([id, json]) => {
+                        if (json.error) return;
+                        
+                        // Pokus o získání názvu předmětu z JSONu
+                        let title = id; // Fallback na ID
+                        try {
+                            // Hledáme první výskyt subjectAbbrev v datech
+                            const days = json.subjectScheduleTable?.days || [];
+                            for (const d of days) {
+                                for (const q of d.queues || []) {
+                                    for (const item of q.items || []) {
+                                        if (item.dto?.subjectAbbrev) {
+                                            title = item.dto.subjectAbbrev;
+                                            throw "Found"; // Break loops
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {}
+                        
+                        parsedData.push({ title, data: json });
+                    });
+
+                    if (parsedData.length > 0) {
+                        setTimetableData(parsedData);
+                        setIsUploadModalOpen(false);
+                        setNotification({ message: `Úspěšně nahráno ${parsedData.length} předmětů.`, type: "success" });
+                    } else {
+                        setNotification({ message: "Nepodařilo se načíst žádná data.", type: "error" });
+                    }
+                }, 600);
+            };
 
             // Handlery
             const handleFileUpload = (event) => {
@@ -729,21 +912,80 @@
 
                     <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Správa rozvrhu">
                         <div className="flex flex-col gap-6">
-                            <div className="flex flex-col items-center">
-                                <label className="block text-sm font-medium text-gray-300 mb-2 text-center">Nahráním souborů přepíšete DEMO.<br></br>Soubory poté můžete nahrávat jednotlivě, nebo všechny naráz.</label>
+                            
+                            {/* Sekce pro automatický import */}
+                            <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                                
+                                <div className="flex flex-col gap-3 items-center">
+                                    <div className="text-center w-full">
+                                        <div className="flex justify-center gap-2 flex-wrap">
+                                            {!isTouchDevice ? (
+                                                <a href={bookmarkletCode} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-full border-2 border-yellow-500 cursor-grab active:cursor-grabbing shadow-lg" title="Přetáhni mě na lištu záložek" onClick={e => e.preventDefault()}>
+                                                    ⚡ Rychlý import z Edisonu
+                                                </a>
+                                            ) : (
+                                                <button 
+                                                    onClick={copyToClipboard} 
+                                                    className={`font-bold py-2 px-4 rounded-full border-2 shadow-lg transition-all duration-300 flex items-center gap-2 ${
+                                                        copyStatus === 'success' ? 'bg-green-600 border-green-500 text-white scale-105' :
+                                                        copyStatus === 'error' ? 'bg-red-600 border-red-500 text-white shake' :
+                                                        'bg-gray-600 hover:bg-gray-500 border-gray-500 text-white'
+                                                    }`}
+                                                >
+                                                    {copyStatus === 'success' ? (
+                                                        <><i className="fas fa-check"></i> Zkopírováno!</>
+                                                    ) : copyStatus === 'error' ? (
+                                                        <><i className="fas fa-times"></i> Chyba!</>
+                                                    ) : (
+                                                        <><i className="fas fa-copy"></i> Zkopírovat skript</>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
 
+                                    <div className="w-full text-left bg-gray-800/50 p-3 rounded text-xs text-gray-400">
+                                        <p className="font-bold mb-1 text-gray-300">Návod na použití:</p>
+                                        {isTouchDevice ? (
+                                            <ol className="list-decimal pl-4 space-y-1">
+                                                <li>Klikněte na <b>Zkopírovat skript</b>.</li>
+                                                <li>Vytvořte si v prohlížeči novou záložku (složka oblíbené).</li>
+                                                <li>Jděte do úpravy této záložky a místo URL vložte zkopírovaný kód.</li>
+                                                <li>Klikněte do adresního řádku, klepněte na záložku.</li>
+                                                <li>Přihlašte se do Edisonu.</li>
+                                                <li>Znovu otevřete záložku.</li>
+                                                <li>Data se automaticky importují.</li>
+
+                                            </ol>
+                                        ) : (
+                                            <ol className="list-decimal pl-4 space-y-1">
+                                                <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
+                                                <li>Otevřete záložku.</li>
+                                                <li>Přihlaste se do Edisonu.</li>
+                                                <li>Znovu otevřete záložku.</li>
+                                                <li>Data se automaticky importují.</li>
+                                            </ol>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center">
                                 <label className="block text-sm font-medium text-gray-300 mb-5 text-center">
-                                    <a class="text-blue-400 hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-300" target="_blank" href="https://github.com/Kuba799500/vsb_timetable_picker_html">Nápověda</a>
+                                    <a class="text-blue-400 text-base hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-300" target="_blank" href="https://github.com/Kuba799500/vsb_timetable_picker_html">Nápověda</a>
                                     <br></br>
-                                    <i className="fa-solid fa-arrow-turn-up rotate-90 mr-1.5"></i>jak získám soubory mých předmětů?
+                                    <i className="fa-solid fa-arrow-turn-up rotate-90 mr-1.5"></i>podrobný návod rychlého importu<br></br>
+                                    <i className="fa-solid fa-arrow-turn-up rotate-90 mr-1.5"></i>získání souborů předmětů manuálně<br></br>
                                 </label>
+
+                                <label className="block text-sm font-medium text-gray-400 mb-2 text-center">Nahráním souborů přepíšete DEMO.</label>
 
                                 <input id="fileInput" type="file" multiple accept=".json" onChange={handleFileUpload} className="hidden" />
                                 <label htmlFor="fileInput" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
                                     <i className="fas fa-upload mr-2"></i>Vybrat soubory
                                 </label>
 
-                                <label className="block text-xs font-medium text-gray-400 mt-3 text-center">Nahrané soubory se uloží do paměti prohlížeče.</label>
+                                <label className="block text-xs font-medium text-gray-400 mt-3 text-center">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br></br>Nahrané soubory se uloží do paměti prohlížeče.</label>
 
                             </div>
                             <div className="border-t border-gray-600 pt-4">
@@ -959,7 +1201,7 @@
                                 width: '300px',
                                 pointerEvents: 'auto', // Aby šlo kliknout na zavírací křížek
                                 touchAction: 'none',
-                                animation: isClosing ? 'fadeOut 0.1s ease-out forwards' : 'fadeIn 0.2s ease-out forwards'
+                                animation: isClosing ? 'modalOut 0.1s ease-in forwards' : 'modalIn 0.2s ease-out forwards'
                             }}>
                             <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
                             <div className="text-sm font-medium">{tooltip.teacher}</div>
@@ -985,8 +1227,11 @@
                         </>
                     )}
 
+                    {notification && (
+                        <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
+                    )}
 
-                    <div class="text-xs text-gray-400">forked and vibe coded by <a class="underline" href="https://instagram.com/kuba.799">JJZ</a><br></br>4.2.2026 9am 🌄 - 5.2.2026 4am ☕️<br></br>5.2.2026 1pm ☀️ - 5.2.2026 5pm 🌆</div>
+                    <div class="text-xs text-gray-400">forked and vibe coded by <a class="underline" href="https://instagram.com/kuba.799">JJZ</a><br></br>4.2.2026 9am 🌄 - 5.2.2026 4am ☕️<br></br>5.2.2026 1pm ☀️ - 5.2.2026 5pm 🌆<br></br>6.2.2026 9am 🥱</div>
 
                 </div>
             );
