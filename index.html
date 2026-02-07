@@ -16,7 +16,8 @@
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
 
     <style>
         body {
@@ -553,6 +554,29 @@
                 localStorage.setItem("selectedSubjects", JSON.stringify(Array.from(selectedSubjects)));
             }, [selectedSubjects]);
 
+            const handleExportJpg = () => {
+                const element = document.getElementById('timetable-content');
+                if (!element) return;
+                setNotification({ message: "Generování obrázku...", type: "loading" });
+                setTimeout(() => {
+                    window.htmlToImage.toJpeg(element, {
+                        quality: 0.95,
+                        pixelRatio: 3,
+                        backgroundColor: '#242424',
+                        filter: (node) => !node.classList || !node.classList.contains('no-export')
+                    }).then(dataUrl => {
+                        const link = document.createElement('a');
+                        link.download = 'rozvrh.jpg';
+                        link.href = dataUrl;
+                        link.click();
+                        setNotification({ message: "Obrázek stažen.", type: "success" });
+                    }).catch(err => {
+                        console.error(err);
+                        setNotification({ message: "Chyba při exportu.", type: "error" });
+                    });
+                }, 100);
+            };
+
             const processImportedData = (results) => {
                 setNotification({ message: "Zpracovávání dat...", type: "loading" });
 
@@ -965,6 +989,7 @@
                                         ) : (
                                             <ol className="list-decimal pl-4 space-y-1">
                                                 <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
+                                                <span className="ml-2 text-gray-500 text-[0.7rem]">→ pokud lištu nevidíte, stiskněte <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Ctrl+Shift+B</code>/<code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Cmd+Shift+B</code></span>
                                                 <li>Otevřete záložku.</li>
                                                 <li>Přihlaste se do Edisonu.</li>
                                                 <li>Znovu otevřete záložku.</li>
@@ -993,6 +1018,11 @@
 
                                 <label className="block text-xs font-medium text-gray-400 mt-3 text-center">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br></br>Nahrané soubory se uloží do paměti prohlížeče.</label>
 
+                            </div>
+                            <div className="w-full">
+                                <button onClick={handleExportJpg} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2">
+                                    <i className="fas fa-camera"></i> Exportovat tabulku (.jpeg)
+                                </button>
                             </div>
                             <div className="border-t border-gray-600 pt-4">
                                 <button
@@ -1070,7 +1100,9 @@
                     
 
                     <div className="w-full overflow-x-auto">
-                        <div style={{ minWidth: TABLE_WIDTH === TABLE_MIN_WIDTH ? TABLE_WIDTH + 20 : TABLE_WIDTH }}>
+                        <div className="inline-flex">
+                        <div className="flex flex-col">
+                        <div id="timetable-content" className="bg-[#242424] inline-block">
                             <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
                                 <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
                                 {timeSlots.map((slot, index) => (
@@ -1079,10 +1111,9 @@
                                     </div>
                                 ))}
                             </div>
-                        </div>    
-                            <div className="relative flex flex-col gap-1 pb-14 select-none" style={{ minWidth: TABLE_WIDTH }}>
+                            <div className="relative flex flex-col gap-1 select-none" style={{ minWidth: TABLE_WIDTH }}>
                         {currentTimePosition && (
-                            <div className="absolute h-full w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)]" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px` }} />
+                            <div className="absolute w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)] no-export" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px`, height: 'calc(100% + 3.5rem)' }} />
                         )}
 
                         {["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek"].map((day) => {
@@ -1121,7 +1152,7 @@
                                                     transition-all duration-150 hover:z-20 hover:shadow-xl hover:scale-105
                                                     ${showUnusedClasses && "select-none"} 
                                                     ${subject.isLecture ? "border-red-800 bg-red-900/80 hover:bg-red-800" : "border-sky-800 bg-sky-900/80 hover:bg-sky-800"} 
-                                                    ${isSelected ? `!border-lime-400 ring-1 ring-lime-400 !bg-opacity-100 shadow-md` : ""} 
+                                                    ${isSelected ? `!border-lime-400 !bg-opacity-100 shadow-md` : ""} 
                                                     ${isEntryHidden(subject) && !isSelected ? "opacity-30 grayscale" : ""}
                                                     ${isSelected && subject.isLecture ? "!bg-red-700" : ""} 
                                                     ${isSelected && !subject.isLecture ? "!bg-sky-700" : ""}
@@ -1168,7 +1199,7 @@
                                                         <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
                                                             {subject.abbreviation}
                                                         </span>
-                                                        {subject.capacity && <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>}
+                                                        <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>
                                                         <span className="font-mono opacity-70">{subject.isLecture ? "P" : "C"}</span>
                                                     </div>
                                                     <div className="pl-1.5 font-semibold truncate" title={subject.teacher}>{subject.teacher}</div>
@@ -1180,6 +1211,11 @@
                                 </div>
                             );
                         })}
+                        </div>
+                        </div>
+                        <div className="h-14 w-full shrink-0"></div>
+                        </div>
+                        <div style={{ width: TABLE_WIDTH === TABLE_MIN_WIDTH ? 20 : 0 }} className="shrink-0"></div>
                         </div>
                     </div>
                     {tooltip && (
