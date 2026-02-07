@@ -103,9 +103,21 @@ Každý uložený JSON soubor by měl obsahovat data o jednom předmětu ve form
 
 ## Nápověda
 
-Nenašli jste, co jste hledali?
-Není vám jasné jak aplikaci ovládat?
-Něco nefunguje?
-Máte nápad na zlepšení?
+- Nenašli jste, co jste hledali?
+- Není vám jasné jak aplikaci ovládat?
+- Něco nefunguje?
+- Máte nápad na zlepšení?
 
 Napište mi [do Issues](https://github.com/kuba799500/vsb_timetable_picker_html/issues)!
+
+
+
+
+
+forked and vibe coded by [JJZ](https://instagram.com/kuba.799)
+
+4.2.2026 9am 🌄 - 5.2.2026 4am ☕️
+
+5.2.2026 1pm ☀️ - 5.2.2026 5pm 🌆
+
+6.2.2026 9am 🥱 - 7.2.2026 2am 🫠
