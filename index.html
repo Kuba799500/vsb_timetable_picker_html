@@ -7,7 +7,7 @@
     <title>VSB Timetable Picker</title>
 
     <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" type="image/png" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -785,6 +785,7 @@
                                     duration: duration,
                                     activityId: item.dto.concreteActivityId,
                                     roomId: item.dto.roomFullCodesString,
+                                    capacity: item.dto.concreteActivityCapacity,
                                 });
                             }
                         });
@@ -1167,6 +1168,7 @@
                                                         <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
                                                             {subject.abbreviation}
                                                         </span>
+                                                        {subject.capacity && <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>}
                                                         <span className="font-mono opacity-70">{subject.isLecture ? "P" : "C"}</span>
                                                     </div>
                                                     <div className="pl-1.5 font-semibold truncate" title={subject.teacher}>{subject.teacher}</div>
