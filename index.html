@@ -948,16 +948,16 @@
                                     <div className="text-center w-full">
                                         <div className="flex justify-center gap-2 flex-wrap">
                                             {!isTouchDevice ? (
-                                                <a href={bookmarkletCode} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-full border-2 border-yellow-500 cursor-grab active:cursor-grabbing shadow-lg" title="Přetáhni mě na lištu záložek" onClick={e => e.preventDefault()}>
+                                                <a href={bookmarkletCode} className="bg-yellow-700 hover:bg-yellow-600 text-yellow-50 font-bold py-2 px-4 rounded-full border-2 border-yellow-600 cursor-grab active:cursor-grabbing shadow-lg transition-all" title="Přetáhni mě na lištu záložek" onClick={e => e.preventDefault()}>
                                                     ⚡ Rychlý import z Edisonu
                                                 </a>
                                             ) : (
                                                 <button 
                                                     onClick={copyToClipboard} 
                                                     className={`font-bold py-2 px-4 rounded-full border-2 shadow-lg transition-all duration-300 flex items-center gap-2 ${
-                                                        copyStatus === 'success' ? 'bg-green-600 border-green-500 text-white scale-105' :
-                                                        copyStatus === 'error' ? 'bg-red-600 border-red-500 text-white shake' :
-                                                        'bg-gray-600 hover:bg-gray-500 border-gray-500 text-white'
+                                                        copyStatus === 'success' ? 'bg-green-600 border-green-600 text-green-50 scale-105' :
+                                                        copyStatus === 'error' ? 'bg-red-600 border-red-600 text-red-50 shake' :
+                                                        'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200'
                                                     }`}
                                                 >
                                                     {copyStatus === 'success' ? (
@@ -1001,30 +1001,22 @@
                                 </div>
                             </div>
 
-                            <div className="flex flex-col items-center">
-                                <label className="block text-sm font-medium text-gray-300 mb-5 text-center">
-                                    <a class="text-blue-400 text-base hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-300" target="_blank" href="https://github.com/Kuba799500/vsb_timetable_picker_html">Nápověda</a>
-                                    <br></br>
-                                    <i className="fa-solid fa-arrow-turn-up rotate-90 mr-1.5"></i>podrobný návod rychlého importu<br></br>
-                                    <i className="fa-solid fa-arrow-turn-up rotate-90 mr-1.5"></i>získání souborů předmětů manuálně<br></br>
-                                </label>
-
-                                <label className="block text-sm font-medium text-gray-400 mb-2 text-center">Nahráním souborů přepíšete DEMO.</label>
-
+                            <div className="flex flex-col items-center gap-4">
+                                <label className="block text-sm font-bold text-gray-300 text-center">Nahráním souborů přepíšete DEMO.</label>
                                 <input id="fileInput" type="file" multiple accept=".json" onChange={handleFileUpload} className="hidden" />
-                                <label htmlFor="fileInput" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
+                                <label htmlFor="fileInput" className="inline-flex items-center bg-blue-700 hover:bg-blue-600 text-blue-100 font-bold py-2 px-6 rounded-full border-2 border-blue-600 cursor-pointer shadow-lg transition-all hover:scale-105">
                                     <i className="fas fa-upload mr-2"></i>Vybrat soubory
                                 </label>
-
-                                <label className="block text-xs font-medium text-gray-400 mt-3 text-center">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br></br>Nahrané soubory se uloží do paměti prohlížeče.</label>
-
+                                <label className="block text-xs font-medium text-gray-400 text-center max-w-sm">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br/>Nahrané soubory se uloží do paměti prohlížeče.</label>
                             </div>
+
                             <div className="w-full">
-                                <button onClick={handleExportJpg} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2">
+                                <button onClick={handleExportJpg} className="w-full bg-emerald-700 hover:bg-emerald-600 text-emerald-100 font-bold py-2 px-4 rounded-full border-2 border-emerald-600 shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105">
                                     <i className="fas fa-camera"></i> Exportovat tabulku (.jpg)
                                 </button>
                             </div>
-                            <div className="border-t border-gray-600 pt-4">
+
+                            <div className="border-t border-gray-600 pt-6">
                                 <button
                                     onClick={() => {
                                         if (confirmDeleteAll) {
@@ -1036,7 +1028,7 @@
                                     onMouseLeave={() => {
                                         if (confirmDeleteAll) setConfirmDeleteAll(false);
                                     }}
-                                    className={`w-full text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2 transition-all duration-150 ${confirmDeleteAll ? 'bg-red-800' : 'bg-red-600 hover:bg-red-700'}`}
+                                    className={`w-full font-bold py-2 px-4 rounded-full border-2 shadow-lg flex items-center justify-center gap-2 transition-all duration-150 hover:scale-105 ${confirmDeleteAll ? 'bg-red-800 border-red-600 text-red-100' : 'bg-red-700 hover:bg-red-600 border-red-600 text-red-100'}`}
                                 >
                                     {confirmDeleteAll ? (
                                         <><i className="fas fa-trash"></i>Opravdu chcete vše smazat a resetovat?</>
@@ -1045,19 +1037,28 @@
                                     )}
                                 </button>
                             </div>
+
+                            <div className="flex flex-col items-center pt-5 border-t border-gray-600">
+                                <a className="text-blue-400 text-lg font-bold hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-300" target="_blank" href="https://github.com/Kuba799500/vsb_timetable_picker_html">
+                                    <i className="fas fa-question-circle mr-2"></i>Nápověda
+                                </a>
+                                <div className="text-xs text-gray-400 text-center">
+                                    <p>podrobný návod rychlého importu &bull; získání souborů manuálně</p>
+                                </div>
+                            </div>
                         </div>
                     </Modal>
 
                     <div className="mb-8 mt-2 px-5 w-full flex flex-col gap-3 items-center">
                         <h1 className="text-2xl font-bold text-white w-full text-center">VŠB Timetable Picker (HTML)</h1>
                         <div className="flex flex-wrap gap-4 items-center w-full justify-center">
-                            <label className="inline-flex items-center cursor-pointer bg-gray-800 px-3 py-2 rounded border border-gray-700 hover:bg-gray-700 transition flex-shrink-0">
+                            <label className="inline-flex items-center cursor-pointer bg-gray-800 hover:bg-gray-700 text-gray-200 border-2 border-gray-700 px-4 py-2 rounded-full transition-all shadow-lg flex-shrink-0 select-none hover:scale-105">
                                 <input type="checkbox" onChange={toggleUnusedClasses} checked={showUnusedClasses} className="sr-only peer" />
                                 <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                                <span className="ml-3 text-sm font-medium text-gray-300 text-nowrap">Zobrazit skryté hodiny</span>
+                                <span className="ml-3 font-bold text-nowrap">Zobrazit skryté hodiny</span>
                             </label>
-                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-nowrap font-bold py-2 px-4 rounded shadow flex items-center gap-2 flex-shrink-0">
-                                <i className="fas fa-cog flex-[0 0 auto]"></i><span className="flex-1 text-center">Správa rozvrhu</span>
+                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-700 hover:bg-blue-600 text-blue-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-blue-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
+                                <i className="fas fa-cog flex-[0 0 auto]"></i><span className="flex-1 text-center px-1">Správa rozvrhu</span>
                             </button>
                         </div>
                     </div>
