@@ -5,10 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VŠB Timetable Picker HTML</title>
+    <meta name="description"
+        content="Vytvořte si na VŠB-TUO rozvrh s předstihem. Nahrajte předměty z Edisonu, porovnávejte varianty, řešte kolize a sdílejte svůj rozvrh s ostatními.">
+    <meta name="keywords"
+        content="VŠB, rozvrh, timetable, VŠB-TUO, Edison, volba rozvrhu, plánovač rozvrhu, univerzita, studium, picker, timetable picker">
+    <meta name="author" content="Kuba799500">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kuba799500.github.io/vsb_timetable_picker_html/">
+    <meta name="theme-color" content="#242424">
 
     <link rel="icon" type="image/svg+xml" href="/vsb_timetable_picker_html/icon.svg">
     <link rel="apple-touch-icon" type="image/png" href="/vsb_timetable_picker_html/apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" type="image/png" href="/vsb_timetable_picker_html/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/vsb_timetable_picker_html/apple-touch-icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -761,7 +770,7 @@
                         setExportedFileName(fileName);
                         setExportModalOpen(true);
                         setNotification(null);
-                        setTimeout(() => shareImage(blob, fileName), 500);
+                        setTimeout(() => shareImage(blob, fileName), 200);
                     }).catch(err => {
                         console.error(err);
                         setNotification({ message: "Chyba při exportu.", type: "error" });
