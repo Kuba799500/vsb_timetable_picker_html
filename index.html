@@ -14,6 +14,34 @@
     <link rel="canonical" href="https://kuba799500.github.io/vsb_timetable_picker_html/">
     <meta name="theme-color" content="#242424">
 
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="VŠB Timetable Picker">
+    <meta property="og:description"
+        content="Vytvořte si na VŠB-TUO rozvrh s předstihem. Nahrajte předměty z Edisonu, porovnávejte varianty, řešte kolize a sdílejte svůj rozvrh s ostatními.">
+    <meta property="og:url" content="https://kuba799500.github.io/vsb_timetable_picker_html/">
+    <meta property="og:image" content="https://kuba799500.github.io/vsb_timetable_picker_html/apple-touch-icon.png">
+    <meta property="og:image:width" content="180">
+    <meta property="og:image:height" content="180">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "VŠB Timetable Picker",
+        "url": "https://kuba799500.github.io/vsb_timetable_picker_html/",
+        "description": "Vytvořte si na VŠB-TUO rozvrh s předstihem. Nahrajte předměty z Edisonu, porovnávejte varianty, řešte kolize a sdílejte svůj rozvrh s ostatními.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "image": "https://kuba799500.github.io/vsb_timetable_picker_html/apple-touch-icon.png",
+        "author": {
+            "@type": "Person",
+            "name": "Kuba799500"
+        }
+    }
+    </script>
+
     <link rel="icon" type="image/svg+xml" href="/vsb_timetable_picker_html/icon.svg">
     <link rel="apple-touch-icon" type="image/png" href="/vsb_timetable_picker_html/apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" type="image/png" href="/vsb_timetable_picker_html/apple-touch-icon.png">
@@ -29,6 +57,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         crossorigin="anonymous">
     <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+    <script>window.module = { exports: {} };</script>
+    <script src="https://cdn.jsdelivr.net/npm/web-haptics@0.0.6/dist/index.js"></script>
+    <script>window.WebHapticsLib = window.module.exports; delete window.module;</script>
 
     <style>
         body {
@@ -141,6 +173,16 @@
     <script type="text/babel">
         window.name = "vsb_timetable_picker_win";
         const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+        // --- HAPTICS ---
+        const hapticsInstance = new window.WebHapticsLib.WebHaptics();
+        const useHaptics = () => {
+            return {
+                trigger: (preset, opts) => {
+                    try { hapticsInstance.trigger(preset, opts); } catch (e) { /* silně ignorovat */ }
+                }
+            };
+        };
 
         // --- DEMO DATA ---
         const DEMO_DATA = [
@@ -497,7 +539,6 @@
                 }
                 if (isLongPress.current) {
                     if (e.cancelable) e.preventDefault();
-                    // Prevent click immediately after long press
                     setTimeout(() => { isLongPress.current = false; }, 200);
                 }
             };
@@ -599,6 +640,7 @@
             );
 
             const [showUnusedClasses, setShowUnusedClasses] = useLocalStorage("showUnusedClasses", false);
+            const haptics = useHaptics();
 
             const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -642,9 +684,11 @@
 
             const copyToClipboard = () => {
                 navigator.clipboard.writeText(bookmarkletCode).then(() => {
+                    haptics.trigger('success');
                     setCopyStatus('success');
                     setTimeout(() => setCopyStatus(null), 3000);
                 }).catch(err => {
+                    haptics.trigger('error');
                     console.error(err);
                     setCopyStatus('error');
                     setTimeout(() => setCopyStatus(null), 3000);
@@ -765,6 +809,7 @@
                         type: 'image/jpeg',
                         filter: (node) => !node.classList || !node.classList.contains('no-export')
                     }).then(blob => {
+                        haptics.trigger('success');
                         const fileName = getFileName();
                         setExportedBlob(blob);
                         setExportedFileName(fileName);
@@ -772,6 +817,7 @@
                         setNotification(null);
                         setTimeout(() => shareImage(blob, fileName), 200);
                     }).catch(err => {
+                        haptics.trigger('error');
                         console.error(err);
                         setNotification({ message: "Chyba při exportu.", type: "error" });
                     });
@@ -785,6 +831,7 @@
                 link.href = URL.createObjectURL(exportedBlob);
                 link.click();
                 URL.revokeObjectURL(link.href);
+                haptics.trigger('success');
                 setNotification({ message: "Obrázek stažen.", type: "success" });
                 setExportModalOpen(false);
             };
@@ -805,10 +852,12 @@
                     } catch (err) {
                         if (err.name !== 'AbortError') {
                             console.error(err);
+                            haptics.trigger('error');
                             setNotification({ message: "Chyba při sdílení.", type: "error" });
                         }
                     }
                 } else {
+                    haptics.trigger('error');
                     setNotification({ message: "Vaše zařízení nepodporuje sdílení.", type: "error" });
                 }
             };
@@ -833,8 +882,10 @@
                 if (parsedData.length > 0) {
                     mergeTimetableData(parsedData);
                     setIsUploadModalOpen(false);
+                    haptics.trigger('success');
                     setNotification({ message: `Úspěšně nahráno ${parsedData.length} předmětů.`, type: "success" });
                 } else {
+                    haptics.trigger('error');
                     setNotification({ message: "Nepodařilo se načíst žádná data.", type: "error" });
                 }
             };
@@ -855,6 +906,7 @@
 
             // Two-step delete all: perform deletion without browser confirm
             const performDeleteAll = () => {
+                haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                 // Pokud jsou aktuální data prázdná, načteme DEMO. Jinak je vymažeme.
                 if (timetableData.length === 0) {
                     setTimetableData(DEMO_DATA);
@@ -874,6 +926,7 @@
 
             // Two-step delete: perform deletion without browser confirm
             const performDeleteSubject = (subjectName) => {
+                haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                 setTimetableData(prev => prev.filter(fileItem => {
                     const containsSubject = fileItem.title.includes(subjectName) ||
                         (fileItem.data?.subjectScheduleTable?.days || []).some(d =>
@@ -949,6 +1002,7 @@
 
 
             const pickClass = (entry) => {
+                haptics.trigger('selection');
                 setSelectedEntries((prev) => {
                     const newSet = new Set(prev);
                     const key = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.isLecture}~${entry.teacher}`;
@@ -959,6 +1013,7 @@
             };
 
             const toggleSubject = (subject) => {
+                haptics.trigger('light');
                 setSelectedSubjects((prev) => {
                     const newSet = new Set(prev);
                     if (newSet.has(subject)) newSet.delete(subject);
@@ -1064,29 +1119,34 @@
                                     </div>
 
                                     <div className="w-full text-left bg-gray-800/50 p-3 rounded text-xs text-gray-400">
-                                        <p className="font-bold mb-1 text-gray-300">Návod na použití:</p>
                                         {isTouchDevice ? (
-                                            <ol className="list-decimal pl-4 space-y-1">
-                                                <li>Klikněte na <b>Zkopírovat skript</b>.</li>
-                                                <li>Vytvořte si v prohlížeči novou záložku (složka oblíbené).</li>
-                                                <li>Jděte do úpravy této záložky a místo URL vložte zkopírovaný kód.</li>
-                                                <li>Klikněte do adresního řádku, klepněte na záložku.</li>
-                                                <li>Přihlašte se do Edisonu.</li>
-                                                <li>Znovu otevřete záložku.</li>
-                                                <li>Data se automaticky importují.</li>
-                                                <li>Záložku můžete odstranit.</li>
+                                            <span>
+                                                <p className="font-bold mb-1 text-gray-300">Rychlý import z Edisonu:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li>Klikněte na <b>Zkopírovat skript</b>.</li>
+                                                    <li>Vytvořte si v prohlížeči novou záložku (složka oblíbené).</li>
+                                                    <li>Jděte do úpravy této záložky a místo URL vložte zkopírovaný kód.</li>
+                                                    <li>Klikněte do adresního řádku, klepněte na záložku.</li>
+                                                    <li>Přihlašte se do Edisonu.</li>
+                                                    <li>Znovu otevřete záložku.</li>
+                                                    <li>Data se automaticky importují.</li>
+                                                    <li>Záložku můžete odstranit.</li>
 
-                                            </ol>
+                                                </ol>
+                                            </span>
                                         ) : (
-                                            <ol className="list-decimal pl-4 space-y-1">
-                                                <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
-                                                <span className="ml-2 text-gray-500 text-[0.7rem]">→ pokud lištu nevidíte, stiskněte <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Ctrl+Shift+B</code>/<code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Cmd+Shift+B</code></span>
-                                                <li>Otevřete záložku.</li>
-                                                <li>Přihlaste se do Edisonu.</li>
-                                                <li>Znovu otevřete záložku.</li>
-                                                <li>Data se automaticky importují.</li>
-                                                <li>Záložku můžete odstranit.</li>
-                                            </ol>
+                                            <span>
+                                                <p className="font-bold mb-1 text-gray-300">Rychlý import z Edisonu:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
+                                                    <span className="ml-2 text-gray-500 text-[0.7rem]">→ pokud lištu nevidíte, stiskněte <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Ctrl+Shift+B</code>/<code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Cmd+Shift+B</code></span>
+                                                    <li>Otevřete záložku.</li>
+                                                    <li>Přihlaste se do Edisonu.</li>
+                                                    <li>Znovu otevřete záložku.</li>
+                                                    <li>Data se automaticky importují.</li>
+                                                    <li>Záložku můžete odstranit.</li>
+                                                </ol>
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -1113,6 +1173,7 @@
                                         if (confirmDeleteAll) {
                                             performDeleteAll();
                                         } else {
+                                            haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                                             setConfirmDeleteAll(true);
                                         }
                                     }}
@@ -1157,7 +1218,7 @@
                         <h1 className="text-2xl font-bold text-white w-full text-center">VŠB Timetable Picker (HTML)</h1>
                         <div className="flex flex-wrap gap-4 items-center w-full justify-center">
                             <label className="inline-flex items-center cursor-pointer bg-gray-800 [@media(hover:hover)]:hover:bg-gray-700 active:bg-gray-700 text-gray-200 border-2 border-gray-700 px-4 py-2 rounded-full transition-all shadow-lg flex-shrink-0 select-none [@media(hover:hover)]:hover:scale-105 active:scale-105">
-                                <input type="checkbox" onChange={() => setShowUnusedClasses(v => !v)} checked={showUnusedClasses} className="sr-only peer" />
+                                <input type="checkbox" onChange={() => { haptics.trigger('light'); setShowUnusedClasses(v => !v); }} checked={showUnusedClasses} className="sr-only peer" />
                                 <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                 <span className="ml-3 font-bold text-nowrap">Zobrazit skryté hodiny</span>
                             </label>
@@ -1188,6 +1249,7 @@
                                         if (confirmDeleteSubject === name) {
                                             performDeleteSubject(name);
                                         } else {
+                                            haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                                             setConfirmDeleteSubject(name);
                                         }
                                     }}
