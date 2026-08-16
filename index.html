@@ -4,10 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VSB Timetable Picker</title>
+    <title>VŠB Timetable Picker HTML</title>
+    <meta name="description"
+        content="Vytvořte si na VŠB-TUO rozvrh s předstihem. Nahrajte předměty z Edisonu, porovnávejte varianty, řešte kolize a sdílejte svůj rozvrh s ostatními.">
+    <meta name="keywords"
+        content="VŠB, rozvrh, timetable, VŠB-TUO, Edison, volba rozvrhu, plánovač rozvrhu, univerzita, studium, picker, timetable picker">
+    <meta name="author" content="Kuba799500">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kuba799500.github.io/vsb_timetable_picker_html/">
+    <meta name="theme-color" content="#242424">
 
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="VŠB Timetable Picker">
+    <meta property="og:description"
+        content="Vytvořte si na VŠB-TUO rozvrh s předstihem. Nahrajte předměty z Edisonu, porovnávejte varianty, řešte kolize a sdílejte svůj rozvrh s ostatními.">
+    <meta property="og:url" content="https://kuba799500.github.io/vsb_timetable_picker_html/">
+    <meta property="og:image" content="https://kuba799500.github.io/vsb_timetable_picker_html/apple-touch-icon.png">
+    <meta property="og:image:width" content="180">
+    <meta property="og:image:height" content="180">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "VŠB Timetable Picker",
+        "url": "https://kuba799500.github.io/vsb_timetable_picker_html/",
+        "description": "Vytvořte si na VŠB-TUO rozvrh s předstihem. Nahrajte předměty z Edisonu, porovnávejte varianty, řešte kolize a sdílejte svůj rozvrh s ostatními.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "image": "https://kuba799500.github.io/vsb_timetable_picker_html/apple-touch-icon.png",
+        "author": {
+            "@type": "Person",
+            "name": "Kuba799500"
+        }
+    }
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="/vsb_timetable_picker_html/icon.svg">
+    <link rel="apple-touch-icon" type="image/png" href="/vsb_timetable_picker_html/apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" type="image/png" href="/vsb_timetable_picker_html/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/vsb_timetable_picker_html/apple-touch-icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -16,8 +54,13 @@
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous">
     <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+    <script>window.module = { exports: {} };</script>
+    <script src="https://cdn.jsdelivr.net/npm/web-haptics@0.0.6/dist/index.js"></script>
+    <script>window.WebHapticsLib = window.module.exports; delete window.module;</script>
 
     <style>
         body {
@@ -56,32 +99,72 @@
             background-color: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(0.25rem);
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
+
         @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
         }
+
         @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
+
         @keyframes modalOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.95); }
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
         }
+
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-4px);
+            }
+
+            75% {
+                transform: translateX(4px);
+            }
         }
+
         .shake {
             animation: shake 0.2s ease-in-out 0s 2;
         }
-
     </style>
+    <meta name="google-site-verification" content="QEsB8Ms4cAvVkRZzmsbqBym6ydzAVORa6KSzqF25EwQ" />
 </head>
 
 <body>
@@ -90,6 +173,16 @@
     <script type="text/babel">
         window.name = "vsb_timetable_picker_win";
         const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+        // --- HAPTICS ---
+        const hapticsInstance = new window.WebHapticsLib.WebHaptics();
+        const useHaptics = () => {
+            return {
+                trigger: (preset, opts) => {
+                    try { hapticsInstance.trigger(preset, opts); } catch (e) { /* silně ignorovat */ }
+                }
+            };
+        };
 
         // --- DEMO DATA ---
         const DEMO_DATA = [
@@ -101,37 +194,26 @@
                             {
                                 title: "Pondělí",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 4, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:30", teacherShortNamesString: "Klikněte sem pravým tlačítkem...", teacherFullNamesString: "Výborně! Zde se vám zobrazí celá jména vyučujících. Prozkoumejte další políčka s ikonou ⓘ a seznamte se s Timetablem :)", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 101, roomFullCodesString: "" } }
-                                        ]
-                                    },
-                                    {
-                                        items: [
-                                            { used: true, duration: 4, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:30", teacherShortNamesString: "...nebo podržte prstem", teacherFullNamesString: "Výborně! Zde se vám zobrazí celá jména vyučujících. Prozkoumejte další políčka s ikonou ⓘ a seznamte se s Timetablem :)", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 102, roomFullCodesString: "" } }
-                                        ]
-                                    }
-
+                                    { items: [{ used: true, duration: 4, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:30", teacherShortNamesString: "Klikněte sem pravým tlačítkem...", teacherFullNamesString: "Výborně! Zde se vám zobrazí celá jména vyučujících. Prozkoumejte další políčka s ikonou ⓘ a seznamte se s Timetablem :)", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 101, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 4, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:30", teacherShortNamesString: "...nebo podržte prstem", teacherFullNamesString: "Výborně! Zde se vám zobrazí celá jména vyučujících. Prozkoumejte další políčka s ikonou ⓘ a seznamte se s Timetablem :)", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 102, roomFullCodesString: "" } }] }
+                                ]
+                            },
+                            {
+                                title: "Úterý",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:00", scheduleWindowEndTime: "18:30", teacherShortNamesString: "Export rozvrhu ⓘ", teacherFullNamesString: "Pokud chcete sdílet váš rozvrh s kamarády nebo si uložit jednu z variant, využijte tuto možnost v menu \"Správa rozvrhu\".", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 302 } }] }
                                 ]
                             },
                             {
                                 title: "Čtvrtek",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Červená čára ⓘ", teacherFullNamesString: "To je jenom ukazatel aktuálního času xdd", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 103, roomFullCodesString: "" } }
-                                        ]
-                                    }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Červená čára ⓘ", teacherFullNamesString: "To je jenom ukazatel aktuálního času xdd", subjectAbbrev: "INFO", lecture: true, concreteActivityId: 103, roomFullCodesString: "" } }] }
                                 ]
                             },
                             {
                                 title: "Pátek",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:45", teacherShortNamesString: "Místnosti ⓘ", teacherFullNamesString: "Kliknutím na odkaz níže zobrazíte mapu s lokací místnosti:", subjectAbbrev: "INFO", lecture: false, concreteActivityId: 104, roomFullCodesString: "PORUA1" } }
-                                        ]
-                                    }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:45", teacherShortNamesString: "Místnosti ⓘ", teacherFullNamesString: "Kliknutím na odkaz níže zobrazíte mapu s lokací místnosti:", subjectAbbrev: "INFO", lecture: false, concreteActivityId: 104, roomFullCodesString: "PORUA1" } }] }
                                 ]
                             }
                         ]
@@ -146,16 +228,8 @@
                             {
                                 title: "Úterý",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zvolení hodiny ⓘ", teacherFullNamesString: "Kliknutím levým tlačítkem nebo ťuknutím zvolíte hodinu předmětu. Zároveň se skryjí ostatní hodiny tohoto předmětu a hodiny které začínají ve stejný čas. (Jak je zobrazit se dozvíte v políčku níže)", subjectAbbrev: "KOLIZE", lecture: false, concreteActivityId: 201, roomFullCodesString: "" } }
-                                        ]
-                                    },
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zobraz. skrytých ⓘ", teacherFullNamesString: "Pro odkrytí klikněte na přepínač pod nadpisem stránky. Zobrazí se vám všechny hodiny, které kolidují se zvolenou hodinou, nebo ostatní hodiny z vybraného předmětu.", subjectAbbrev: "KOLIZE", lecture: false, concreteActivityId: 202, roomFullCodesString: "" } }
-                                        ]
-                                    }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zvolení hodiny ⓘ", teacherFullNamesString: "Kliknutím levým tlačítkem nebo ťuknutím zvolíte hodinu předmětu. Zároveň se skryjí ostatní hodiny tohoto předmětu a hodiny které začínají ve stejný čas. (Jak je zobrazit se dozvíte v políčku níže)", subjectAbbrev: "KOLIZE", lecture: false, concreteActivityId: 201, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zobraz. skrytých ⓘ", teacherFullNamesString: "Pro odkrytí klikněte na přepínač pod nadpisem stránky. Zobrazí se vám všechny hodiny, které kolidují se zvolenou hodinou, nebo ostatní hodiny z vybraného předmětu.", subjectAbbrev: "KOLIZE", lecture: false, concreteActivityId: 202, roomFullCodesString: "" } }] }
                                 ]
                             }
                         ]
@@ -170,21 +244,13 @@
                             {
                                 title: "Pondělí",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Reset ⓘ", teacherFullNamesString: "Pokud byste chtěli znovu zobrazit DEMO nebo smazat nahrané předměty, můžete využít tlačítko \"Smazat vše a resetovat\" v menu Správa rozvrhu.", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 302, roomFullCodesString: "" } }
-                                        ]
-                                    }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Reset ⓘ", teacherFullNamesString: "Pokud byste chtěli znovu zobrazit DEMO nebo smazat všechny nahrané předměty, můžete využít tlačítko \"Smazat vše a resetovat\" v menu Správa rozvrhu.", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 302, roomFullCodesString: "" } }] }
                                 ]
                             },
                             {
                                 title: "Pátek",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Smazat předmět ⓘ", teacherFullNamesString: "Při najetí na předmět v nabídce nahoře se vám ukáže křížek. Tím můžete předmět smazat (nebojte, můžete ho pak znovu nahrát)", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 301, roomFullCodesString: "" } }
-                                        ]
-                                    }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Smazat předmět ⓘ", teacherFullNamesString: "Při najetí na předmět v nabídce nahoře se vám ukáže křížek. Tím můžete předmět smazat (nebojte, můžete ho pak znovu nahrát)", subjectAbbrev: "SMAZAT", lecture: true, concreteActivityId: 301, roomFullCodesString: "" } }] }
                                 ]
                             }
                         ]
@@ -199,37 +265,22 @@
                             {
                                 title: "Úterý",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "17:30", teacherShortNamesString: "Zobraz. předmětů ⓘ", teacherFullNamesString: "Při kliknutí na předmět v horní nabídce zobrazíte všechny jeho hodiny. Zvolené hodiny z jiných předmětů se vám zde také objeví.", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 302, roomFullCodesString: "" } }
-                                        ]
-                                    }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "17:30", teacherShortNamesString: "Zobraz. předmětů ⓘ", teacherFullNamesString: "Při kliknutí na předmět v horní nabídce zobrazíte všechny jeho hodiny. Zvolené hodiny z jiných předmětů se vám zde také objeví.", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 302, roomFullCodesString: "" } }] }
                                 ]
                             },
                             {
                                 title: "Středa",
                                 queues: [
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "08:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Přednáška ⓘ", teacherFullNamesString: "Přednášková hodina je označena písmenem \"P\" vpravo nahoře a má červenou barvu.", subjectAbbrev: "DEMO1", lecture: true, concreteActivityId: 303, roomFullCodesString: "" } }
-                                        ]
-                                    },
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "11:30", teacherShortNamesString: "Cvičení ⓘ", teacherFullNamesString: "Hodina cvičení je označena písmenem \"C\" vpravo nahoře a má modrou barvu.", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 304, roomFullCodesString: "" } }
-                                        ]
-                                    },
-                                    {
-                                        items: [
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "14:15", teacherShortNamesString: "Povinnosti ⓘ", teacherFullNamesString: "U předmětu v horní nabídce se zobrazí zda si máte zvolit přednášku a/nebo cvičení. Při zvolení se ikona probarví. (Standartně 1 přednáška a/nebo cvičení. Jinak bych musel kód dost upravit 💀)", subjectAbbrev: "DEMO1", lecture: true, concreteActivityId: 305, roomFullCodesString: "" } }
-                                        ]
-                                    },
-                                    {
-                                        items: [    
-                                            { used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "15:45", teacherShortNamesString: "Správa rozvrhu ⓘ", teacherFullNamesString: "Kliknutím na tlačítko pod nadpisem stránky se dostanete do menu, kde můžete nahrávat své předměty (je zde i odkaz na nápovědu). Vaše soubory automaticky přepíšou DEMO, takže nemusíte nic mazat.", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 306, roomFullCodesString: "" } }
-                                        ]
-                                    }
-
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "08:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Přednáška ⓘ", teacherFullNamesString: "Přednášková hodina je označena písmenem \"P\" vpravo nahoře a má červenou barvu.", subjectAbbrev: "DEMO1", lecture: true, concreteActivityId: 303, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "11:30", teacherShortNamesString: "Cvičení ⓘ", teacherFullNamesString: "Hodina cvičení je označena písmenem \"C\" vpravo nahoře a má modrou barvu.", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 304, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "14:15", teacherShortNamesString: "Povinnosti ⓘ", teacherFullNamesString: "U předmětu v horní nabídce se zobrazí zda si máte zvolit přednášku a/nebo cvičení. Při zvolení se ikona probarví. (Standartně 1 přednáška a/nebo cvičení. Jinak bych musel kód dost upravit 💀)", subjectAbbrev: "DEMO1", lecture: true, concreteActivityId: 305, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "15:45", teacherShortNamesString: "Správa rozvrhu ⓘ", teacherFullNamesString: "Kliknutím na tlačítko pod nadpisem stránky se dostanete do menu, kde můžete nahrávat své předměty (je zde i odkaz na nápovědu). Vaše soubory automaticky přepíšou DEMO, takže nemusíte nic mazat. Pokud nahrajete předmět, který se zde již nachází, tak se použijí data z nově nahraného.", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 306 } }] }
+                                ]
+                            },
+                            {
+                                title: "Pátek",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "15:00", teacherShortNamesString: "Kapacita ⓘ", teacherFullNamesString: "Mezi zkratkou předmětu a typem hodiny (P/C) se zobrazí kapacita učebny dané hodiny. Tyto data se často mění, zkontrolujte v Edisonu. Pokud bude kapacita 0, nebo bude ještě před volbou rozvrhu hodina zaplněna, nemůžete se již přihlásit!", subjectAbbrev: "DEMO1", lecture: false, concreteActivityId: 302, concreteActivityCapacity: 123 } }] }
                                 ]
                             }
                         ]
@@ -239,39 +290,8 @@
         ];
 
         const Modal = ({ isOpen, onClose, children, title }) => {
-            const [shouldRender, setShouldRender] = useState(isOpen);
-
-            useEffect(() => {
-                if (isOpen) {
-                    setShouldRender(true);
-                } else {
-                    const timer = setTimeout(() => setShouldRender(false), 100);
-                    return () => clearTimeout(timer);
-                }
-            }, [isOpen]);
-
-            useEffect(() => {
-                if (shouldRender) {
-                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-                    const scrollY = window.scrollY;
-                    document.body.style.position = 'fixed';
-                    document.body.style.top = `-${scrollY}px`;
-                    document.body.style.width = '100%';
-                    document.body.style.overflow = 'hidden';
-                    document.body.style.paddingRight = `${scrollbarWidth}px`;
-                }
-                return () => {
-                    if (shouldRender) {
-                        const scrollY = document.body.style.top;
-                        document.body.style.position = '';
-                        document.body.style.top = '';
-                        document.body.style.width = '';
-                        document.body.style.overflow = '';
-                        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-                        document.body.style.paddingRight = '';
-                    }
-                };
-            }, [shouldRender]);
+            const shouldRender = useMountTransition(isOpen, 100);
+            useBodyScrollLock(shouldRender);
 
             if (!shouldRender) return null;
 
@@ -290,6 +310,8 @@
                 </div>
             );
         };
+
+
 
         const Notification = ({ message, type, onClose }) => {
             const [isClosing, setIsClosing] = useState(false);
@@ -326,30 +348,299 @@
             );
         };
 
-        const App = () => {
-            const [timetableData, setTimetableData] = useState(() => {
-                const saved = localStorage.getItem("vsb_timetable_data");
-                if (saved) {
-                    try {
-                        const parsed = JSON.parse(saved);
-                        return parsed && parsed.length > 0 ? parsed : DEMO_DATA;
-                    } catch (e) { return DEMO_DATA; }
+        const bookmarkletCode = `javascript:(async()=>{const u="https://kuba799500.github.io/vsb_timetable_picker_html",t="https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu",ff=navigator.userAgent.includes("Firefox");if(!location.href.startsWith(t))return window.open(t,"_blank");let d=document,b=d.body,n=d.createElement("div");n.style.cssText="position:fixed;top:20px;right:20px;background:red;color:white;padding:15px;z-index:9999;font-size:20px;border-radius:5px;";n.textContent="Stahování dat...";b.appendChild(n);const o=[...d.querySelectorAll("a")].map(e=>{let c=e.getAttribute("onclick")||"",m=c.match(/(\\w+)_selectStudyYearObligation\\s*\\(\\s*(\\d+)/),id=m?m[2]:(e.href.match(/EselectStudyYearObligationId!(\\d+)/)||[])[1],pid=m?m[1]:null;return id?{id,pid:pid&&!pid.endsWith("_")?pid+"_":pid}:null}).filter(Boolean);if(!o.length){n.textContent="Nebyly nalezeny žádné předměty.";return setTimeout(()=>n.remove(),3e3)}let w=null;if(!ff){w=window.open("","vsb_timetable_picker_win");try{if(w.location.href==="about:blank")w.location.href=u;w.postMessage({type:"VSB_DOWNLOAD_STARTED",count:o.length},"*")}catch(e){}}const s={};for(const{id,pid}of o){n.textContent=\`Stahování dat... (\${Object.keys(s).length+1}/\${o.length})\`;try{let r=await fetch(\`/wps/.cz.vsb.edison.edu.study.pass.portlet/jaxrs/scheduleSelection/selectStudyYearObligation/\${id}\`,{method:"PUT",headers:{"Content-Type":"application/x-www-form-urlencoded","X-Requested-With":"XMLHttpRequest","Accept":"application/json"},body:new URLSearchParams({portletId:pid||""})});s[id]=r.ok?await r.json():{error:"http",status:r.status}}catch(e){s[id]={error:"fetch",message:String(e)}}}let sent=false;if(!ff&&w&&!w.closed){n.textContent="Čekám na aplikaci...";let ack=false;const onAck=(e)=>{if(e.data&&e.data.type==="VSB_READY")ack=true};window.addEventListener("message",onAck);for(let i=0;i<20&&!ack;i++){try{w.postMessage({type:"VSB_SCHEDULE_DATA",payload:s},"*")}catch(e){}await new Promise(r=>setTimeout(r,500))}window.removeEventListener("message",onAck);if(ack){window.close();n.remove();sent=true;w.focus()}}if(!sent){n.remove();let k=Object.keys(s);if(k.length&&confirm(\`Nezdařilo se přesměrování zpět na Timetable.\\nSoubory nahrajte ručně přes nabídku "Správa rozvrhu" -> "Vybrat soubory".\\n\\nChcete stáhnout \${k.length} souborů?\`)){for(let i of k){let d=s[i],sub=d?.subjectScheduleTable?.days?.flatMap(x=>x.queues||[])?.flatMap(x=>x.items||[])?.find(x=>x.dto?.subjectAbbrev)?.dto?.subjectAbbrev,a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:"application/json"}));a.download=sub?\`\${i}-\${sub}.json\`:\`subject_\${i}.json\`;document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,500))}}}})();`;
+
+        const timeSlots = [
+            "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
+            "11:30-12:15", "12:30-13:15", "13:15-14:00", "14:15-15:00", "15:00-15:45",
+            "16:00-16:45", "16:45-17:30", "17:45-18:30", "18:30-19:15",
+        ];
+
+        const colors = ["bg-green-700", "bg-fuchsia-500", "bg-orange-500", "bg-yellow-500", "bg-purple-700", "bg-pink-900", "bg-indigo-500", "bg-violet-900"];
+
+        const SLOT_MIN = 50;
+        const SLOT_MAX = 75;
+
+        const calculateSlotWidth = (viewportWidth) => {
+            const NUM_SLOTS = timeSlots.length + 1
+            const idealSlotWidth = (viewportWidth - 8) / NUM_SLOTS;
+            return Math.max(SLOT_MIN, Math.min(SLOT_MAX, idealSlotWidth));
+        };
+
+        const calculateCurrentTimePosition = (slotWidth) => {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const TIME_SLOT_WIDTH = slotWidth;
+
+            for (let i = 0; i < timeSlots.length; i++) {
+                const [start, end] = timeSlots[i].split("-").map((t) => {
+                    const [h, m] = t.split(":").map(Number);
+                    return h * 60 + m;
+                });
+
+                if (currentMinutes < start) {
+                    if (i === 0) {
+                        return 1;
+                    }
+                    return i * TIME_SLOT_WIDTH;
                 }
-                return DEMO_DATA;
+
+                if (currentMinutes >= start && currentMinutes < end) {
+                    const slotProgress = (currentMinutes - start) / (end - start);
+                    const position = i * TIME_SLOT_WIDTH + slotProgress * TIME_SLOT_WIDTH;
+                    return position === 0 ? 1 : position;
+                }
+
+            }
+
+            return timeSlots.length * TIME_SLOT_WIDTH;
+        };
+
+        const calculateEndTime = (startTime, duration) => {
+            startTime = startTime.substring(0, 5);
+            const startIndex = timeSlots.findIndex(slot => slot.startsWith(startTime));
+
+            if (startIndex === -1) return "??:??";
+            const endIndex = startIndex + duration - 1;
+
+            if (endIndex < timeSlots.length) {
+                return timeSlots[endIndex].split("-")[1];
+            }
+
+            return "??:??";
+        };
+
+        const formatSchedule = (scheduleTable) => {
+            const formatted = [];
+            if (!scheduleTable || !scheduleTable.days) return [];
+            scheduleTable.days.forEach((day) => {
+                day.queues.forEach((queue) => {
+                    queue.items.forEach((item) => {
+                        if (item.used && item.dto) {
+                            const duration = item.duration || 2;
+                            formatted.push({
+                                day: day.title,
+                                startTime: item.dto.scheduleWindowBeginTime,
+                                endTime: calculateEndTime(item.dto.scheduleWindowBeginTime, duration),
+                                teacher: item.dto.teacherShortNamesString,
+                                teacherFull: item.dto.teacherFullNamesString,
+                                abbreviation: item.dto.subjectAbbrev,
+                                isLecture: item.dto.lecture,
+                                duration: duration,
+                                activityId: item.dto.concreteActivityId,
+                                roomId: item.dto.roomFullCodesString,
+                                capacity: item.dto.concreteActivityCapacity,
+                            });
+                        }
+                    });
+                });
+            });
+            return formatted;
+        };
+
+        // Tetris Layout Logic
+        const calculateLayout = (entries) => {
+            const sorted = [...entries].sort((a, b) => {
+                if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime);
+                return b.duration - a.duration;
             });
 
-            const [selectedEntries, setSelectedEntries] = useState(() => {
-                const savedEntries = localStorage.getItem("selectedEntries");
-                return new Set(savedEntries ? JSON.parse(savedEntries) : []);
-            });
-            const [selectedSubjects, setSelectedSubjects] = useState(() => {
-                const savedSubjects = localStorage.getItem("selectedSubjects");
-                return new Set(savedSubjects ? JSON.parse(savedSubjects) : []);
+            const rows = [];
+
+            const positioned = sorted.map(entry => {
+                let rowIndex = -1;
+                for (let r = 0; r < rows.length; r++) {
+                    if (entry.startTime >= rows[r]) {
+                        rowIndex = r;
+                        rows[r] = entry.endTime;
+                        break;
+                    }
+                }
+                if (rowIndex === -1) {
+                    rowIndex = rows.length;
+                    rows.push(entry.endTime);
+                }
+                return { ...entry, visualRowIndex: rowIndex };
             });
 
-            const [showUnusedClasses, setShowUnusedClasses] = useState(
-                localStorage.getItem("showUnusedClasses") === "true"
+            return {
+                items: positioned,
+                rowCount: Math.max(1, rows.length)
+            };
+        };
+
+        const getTimeSlotIndex = (time) => {
+            return timeSlots.findIndex(slot => slot.startsWith(time)) + 2;
+        }
+
+        const useLocalStorage = (key, initialValue, customParse = x => x, customFormat = x => x) => {
+            const [storedValue, setStoredValue] = useState(() => {
+                if (typeof window === "undefined") {
+                    return initialValue;
+                }
+                try {
+                    const item = window.localStorage.getItem(key);
+                    return item ? customParse(JSON.parse(item)) : initialValue;
+                } catch (error) {
+                    console.error(error);
+                    return initialValue;
+                }
+            });
+
+            const setValue = (value) => {
+                try {
+                    const valueToStore = value instanceof Function ? value(storedValue) : value;
+                    setStoredValue(valueToStore);
+                    if (typeof window !== "undefined") {
+                        window.localStorage.setItem(key, JSON.stringify(customFormat(valueToStore)));
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            return [storedValue, setValue];
+        };
+
+        const useLongPress = ({ onLongPress, delay = 500 }) => {
+            const timerRef = useRef(null);
+            const isLongPress = useRef(false);
+            const startPos = useRef({ x: 0, y: 0 });
+
+            const handleTouchStart = (e, context) => {
+                isLongPress.current = false;
+                const touch = e.touches[0];
+                const x = touch.clientX;
+                const y = touch.clientY;
+                startPos.current = { x, y };
+
+                timerRef.current = setTimeout(() => {
+                    isLongPress.current = true;
+                    if (onLongPress) onLongPress(e, context, { x, y });
+                }, delay);
+            };
+
+            const handleTouchMove = (e) => {
+                if (timerRef.current) {
+                    const touch = e.touches[0];
+                    const moveX = Math.abs(touch.clientX - startPos.current.x);
+                    const moveY = Math.abs(touch.clientY - startPos.current.y);
+                    if (moveX > 10 || moveY > 10) {
+                        clearTimeout(timerRef.current);
+                        timerRef.current = null;
+                    }
+                }
+            };
+
+            const handleTouchEnd = (e) => {
+                if (timerRef.current) {
+                    clearTimeout(timerRef.current);
+                    timerRef.current = null;
+                }
+                if (isLongPress.current) {
+                    if (e.cancelable) e.preventDefault();
+                    setTimeout(() => { isLongPress.current = false; }, 200);
+                }
+            };
+
+            return {
+                handlers: {
+                    onTouchStart: handleTouchStart,
+                    onTouchMove: handleTouchMove,
+                    onTouchEnd: handleTouchEnd
+                },
+                isLongPress
+            };
+        };
+
+        // Helper: Najde první subjectAbbrev v JSON datech
+        const findSubjectAbbrev = (json) => {
+            const items = (json.subjectScheduleTable?.days || []).flatMap(d => (d.queues || []).flatMap(q => q.items || []));
+            return items.find(it => it.dto?.subjectAbbrev)?.dto.subjectAbbrev;
+        };
+
+        // Helper: Přečte soubor jako JSON
+        const readFileAsJSON = (file) => new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    resolve({ title: file.name.replace(".json", ""), data: json.default || json });
+                } catch { resolve(null); }
+            };
+            reader.readAsText(file);
+        });
+
+        const useMountTransition = (isMounted, unmountDelay) => {
+            const [hasTransitionedIn, setHasTransitionedIn] = useState(false);
+
+            useEffect(() => {
+                let timeoutId;
+                if (isMounted && !hasTransitionedIn) {
+                    setHasTransitionedIn(true);
+                } else if (!isMounted && hasTransitionedIn) {
+                    timeoutId = setTimeout(() => setHasTransitionedIn(false), unmountDelay);
+                }
+                return () => clearTimeout(timeoutId);
+            }, [unmountDelay, isMounted, hasTransitionedIn]);
+
+            return hasTransitionedIn;
+        };
+
+        const useBodyScrollLock = (isLocked) => {
+            useLayoutEffect(() => {
+                if (!isLocked) return;
+
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                const scrollY = window.scrollY;
+                const originalStyles = {
+                    position: document.body.style.position,
+                    top: document.body.style.top,
+                    width: document.body.style.width,
+                    overflow: document.body.style.overflow,
+                    paddingRight: document.body.style.paddingRight,
+                    boxSizing: document.body.style.boxSizing
+                };
+
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${scrollY}px`;
+                document.body.style.width = '100vw'; // Use 100vw to cover viewport
+                document.body.style.overflow = 'hidden';
+                document.body.style.boxSizing = 'border-box'; // Ensure padding is inside
+                // Only add padding if there was a scrollbar
+                if (scrollbarWidth > 0) {
+                    document.body.style.paddingRight = `${scrollbarWidth}px`;
+                }
+
+                return () => {
+                    document.body.style.position = originalStyles.position;
+                    document.body.style.top = originalStyles.top;
+                    document.body.style.width = originalStyles.width;
+                    document.body.style.overflow = originalStyles.overflow;
+                    document.body.style.paddingRight = originalStyles.paddingRight;
+                    document.body.style.boxSizing = originalStyles.boxSizing;
+                    window.scrollTo(0, scrollY);
+                };
+            }, [isLocked]);
+        };
+
+        const App = () => {
+            const [timetableData, setTimetableData] = useLocalStorage("vsb_timetable_data", DEMO_DATA, (parsed) => {
+                return parsed && parsed.length > 0 ? parsed : DEMO_DATA;
+            });
+
+            const [selectedEntries, setSelectedEntries] = useLocalStorage("selectedEntries", new Set(),
+                (arr) => new Set(arr),
+                (set) => Array.from(set)
             );
+
+            const [selectedSubjects, setSelectedSubjects] = useLocalStorage("selectedSubjects", new Set(),
+                (arr) => new Set(arr),
+                (set) => Array.from(set)
+            );
+
+            const [showUnusedClasses, setShowUnusedClasses] = useLocalStorage("showUnusedClasses", false);
+            const haptics = useHaptics();
 
             const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -363,47 +654,41 @@
                 setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
             }, []);
 
-            // --- BOOKMARKLET CODE ---
-            // Minifikovaná verze skriptu pro získání dat z Edisonu
-            const bookmarkletCode = `javascript:(async()=>{const e="https://kuba799500.github.io/vsb_timetable_picker_html",t="https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu";if(!location.href.startsWith(t))return window.open(t,"_blank");let n;try{n=document.createElement("div"),n.style.cssText="position:fixed;top:20px;right:20px;background:red;color:white;padding:15px;z-index:9999;font-size:20px;border-radius:5px;box-shadow:0 0 10px rgba(0,0,0,0.5);",n.textContent="Stahování dat...",document.body.appendChild(n);const o=Array.from(document.querySelectorAll("a")).filter(e=>"Zvolit"===e.title||"Zvolit"===e.textContent.trim()).map(e=>{const t=e.getAttribute("onclick")||"",n=t.match(/([A-Za-z0-9_]+)_selectStudyYearObligation\\s*\\(\\s*(\\d+)\\s*\\)/),o=n?n[2]:e.href.match(/EselectStudyYearObligationId!(\\d+)/)?.[1];let r=n?n[1]:null;return r&&!r.endsWith("_")&&(r+="_"),o?{id:o,portletId:r}:null}).filter(Boolean);if(!o.length)return n.textContent="Nebyly nalezeny žádné předměty.",void setTimeout(()=>n.remove(),3e3);let r=window.open("","vsb_timetable_picker_win");if(r){try{"about:blank"===r.location.href&&(r.location.href=e)}catch(e){}try{r.postMessage({type:"VSB_DOWNLOAD_STARTED",count:o.length},e)}catch(e){}}const a=t=>{t.data?.type==="VSB_CLIENT_READY"&&r&&r.postMessage({type:"VSB_DOWNLOAD_STARTED",count:o.length},e)};window.addEventListener("message",a);const s={};for(const{id:t,portletId:r}of o){n.textContent=\`Stahování dat... (\${Object.keys(s).length+1}/\${o.length})\`;try{const o=await fetch(\`/wps/.cz.vsb.edison.edu.study.pass.portlet/jaxrs/scheduleSelection/selectStudyYearObligation/\${t}\`,{method:"PUT",headers:{"Content-Type":"application/x-www-form-urlencoded","X-Requested-With":"XMLHttpRequest",Accept:"application/json"},body:new URLSearchParams({portletId:r||""})});s[t]=o.ok?await o.json():{error:"http",status:o.status}}catch(e){s[t]={error:"fetch",message:String(e)}}await new Promise(e=>setTimeout(e,150))}window.removeEventListener("message",a),r&&r.focus();if(r&&!r.closed){const t=()=>{try{r.postMessage({type:"VSB_SCHEDULE_DATA",payload:s},e),r.focus(),window.close(),n.remove()}catch(e){n.textContent="Chyba při odesílání dat.",setTimeout(()=>n.remove(),3e3)}};let o=!1;const i=e=>{e.data?.type==="VSB_CLIENT_READY"&&(o||(o=!0,window.removeEventListener("message",i),t()))};window.addEventListener("message",i);try{r.postMessage({type:"VSB_PING"},e)}catch(e){}setTimeout(()=>{o||(o=!0,window.removeEventListener("message",i),t())},2500)}else{const e=Object.keys(s);if(n.remove(),e.length>0&&confirm(\`Nezdařilo se přesměrování zpět na Timetable.\\nSoubory nahrajte ručně přes nabídku "Správa rozvrhu" -> "Vybrat soubory".\\n\\nChcete stáhnout \${e.length} souborů?\`))for(const t of e){const o=s[t]?.subjectScheduleTable?.days?.flatMap(e=>e.queues||[])?.flatMap(e=>e.items||[])?.find(e=>e.dto?.subjectAbbrev)?.dto?.subjectAbbrev,r=document.createElement("a");r.href=URL.createObjectURL(new Blob([JSON.stringify(s[t],null,2)],{type:"application/json"})),r.download=o?\`\${t}-\${o}.json\`:\`subject_\${t}.json\`,document.body.appendChild(r),r.click(),r.remove(),await new Promise(e=>setTimeout(e,500))}}}catch(e){console.error(e),n?(document.body.appendChild(n),n.textContent="Chyba: "+e.message,setTimeout(()=>n.remove(),4e3)):alert("Chyba: "+e.message)}})();`;
+            const [exportModalOpen, setExportModalOpen] = useState(false);
+            const [exportedBlob, setExportedBlob] = useState(null);
+            const [exportedFileName, setExportedFileName] = useState("");
+
+
 
             useEffect(() => {
                 const handleMessage = (event) => {
-                    // Bezpečnostní kontrola: přijímáme zprávy pouze z Edisonu
                     if (event.origin !== "https://edison.sso.vsb.cz") return;
 
                     if (event.data && event.data.type === 'VSB_SCHEDULE_DATA') {
                         const results = event.data.payload;
-                        // Převedeme objekt {id: json} na pole [{title, data}]
                         processImportedData(results);
-                    }
-
-                    if (event.data && event.data.type === 'VSB_PING') {
-                        event.source.postMessage({ type: "VSB_CLIENT_READY" }, event.origin);
+                        try { event.source.postMessage({ type: "VSB_READY" }, event.origin); } catch (e) { }
                     }
 
                     if (event.data && event.data.type === 'VSB_DOWNLOAD_STARTED') {
-                        setNotification({ 
-                            message: `Stahování ${event.data.count} předmětů z Edisonu...`, 
-                            type: "loading" 
+                        setNotification({
+                            message: `Stahování ${event.data.count} předmětů z Edisonu...`,
+                            type: "loading"
                         });
                     }
                 };
                 window.addEventListener("message", handleMessage);
 
-                // Odeslání signálu, že jsme připraveni (pro urychlení načítání)
-                if (window.opener) {
-                    window.opener.postMessage({ type: "VSB_CLIENT_READY" }, "https://edison.sso.vsb.cz");
-                }
-
                 return () => window.removeEventListener("message", handleMessage);
             }, []);
-            
+
             const copyToClipboard = () => {
                 navigator.clipboard.writeText(bookmarkletCode).then(() => {
+                    haptics.trigger('success');
                     setCopyStatus('success');
                     setTimeout(() => setCopyStatus(null), 3000);
                 }).catch(err => {
+                    haptics.trigger('error');
                     console.error(err);
                     setCopyStatus('error');
                     setTimeout(() => setCopyStatus(null), 3000);
@@ -424,9 +709,7 @@
                 if (tooltip) setIsClosing(false);
             }, [tooltip]);
 
-            useEffect(() => {
-                localStorage.setItem("vsb_timetable_data", JSON.stringify(timetableData));
-            }, [timetableData]);
+
 
             useLayoutEffect(() => {
                 if (tooltip) {
@@ -470,24 +753,11 @@
                 }
             }, [tooltip]);
 
-            const timeSlots = [
-                "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
-                "11:30-12:15", "12:30-13:15", "13:15-14:00", "14:15-15:00", "15:00-15:45",
-                "16:00-16:45", "16:45-17:30", "17:45-18:30", "18:30-19:15",
-            ];
 
-            const colors = ["bg-green-700", "bg-fuchsia-500", "bg-orange-500", "bg-yellow-500", "bg-purple-700", "bg-pink-900", "bg-indigo-500", "bg-violet-900"];
-            const subjectColors = {};
+            const subjectColors = useRef({}).current;
 
 
-            const SLOT_MIN = 50;
-            const SLOT_MAX = 75;
 
-            const calculateSlotWidth = (viewportWidth) => {
-                const NUM_SLOTS = timeSlots.length +1
-                const idealSlotWidth = (viewportWidth-8) / NUM_SLOTS;
-                return Math.max(SLOT_MIN, Math.min(SLOT_MAX, idealSlotWidth));
-            };
 
             const [slotWidth, setSlotWidth] = useState(() => {
                 const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
@@ -502,156 +772,141 @@
                 return () => window.removeEventListener('resize', onResize);
             }, []);
 
-            const getCurrentTimePosition = () => {
-                const now = new Date();
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
-                const TIME_SLOT_WIDTH = slotWidth;
 
-                for (let i = 0; i < timeSlots.length; i++) {
-                    const [start, end] = timeSlots[i].split("-").map((t) => {
-                        const [h, m] = t.split(":").map(Number);
-                        return h * 60 + m;
-                    });
 
-                    if (currentMinutes < start) {
-                        if (i === 0) {
-                            return 1;
-                        }
-                        return i * TIME_SLOT_WIDTH;
-                    }
-
-                    if (currentMinutes >= start && currentMinutes < end) {
-                        const slotProgress = (currentMinutes - start) / (end - start);
-                        const position = i * TIME_SLOT_WIDTH + slotProgress * TIME_SLOT_WIDTH;
-                        return position === 0 ? 1 : position;
-                    }
-
-                }
-
-                return timeSlots.length * TIME_SLOT_WIDTH;
-            };
-
-            const [currentTimePosition, setCurrentTimePosition] = useState(getCurrentTimePosition());
+            const [currentTimePosition, setCurrentTimePosition] = useState(calculateCurrentTimePosition(slotWidth));
 
             // Update position immediately when slot width changes (responsive resize)
             useEffect(() => {
-                setCurrentTimePosition(getCurrentTimePosition());
+                setCurrentTimePosition(calculateCurrentTimePosition(slotWidth));
             }, [slotWidth]);
 
             // Update position every 60 seconds for time passage
             useEffect(() => {
                 const interval = setInterval(() => {
-                    setCurrentTimePosition(getCurrentTimePosition());
+                    setCurrentTimePosition(calculateCurrentTimePosition(slotWidth));
                 }, 60000);
                 return () => clearInterval(interval);
             }, []);
 
-            useEffect(() => {
-                localStorage.setItem("selectedEntries", JSON.stringify(Array.from(selectedEntries)));
-            }, [selectedEntries]);
+            // localStorage sync for selectedEntries and selectedSubjects is handled by useLocalStorage hook
 
-            useEffect(() => {
-                localStorage.setItem("selectedSubjects", JSON.stringify(Array.from(selectedSubjects)));
-            }, [selectedSubjects]);
+            const getFileName = () => {
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                return `rozvrh_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}.png`;
+            };
 
             const handleExportJpg = () => {
                 const element = document.getElementById('timetable-content');
                 if (!element) return;
                 setNotification({ message: "Generování obrázku...", type: "loading" });
                 setTimeout(() => {
-                    window.htmlToImage.toJpeg(element, {
+                    window.htmlToImage.toBlob(element, {
                         quality: 0.95,
                         pixelRatio: 3,
                         backgroundColor: '#242424',
+                        type: 'image/jpeg',
                         filter: (node) => !node.classList || !node.classList.contains('no-export')
-                    }).then(dataUrl => {
-                        const link = document.createElement('a');
-                        link.download = 'rozvrh.jpg';
-                        link.href = dataUrl;
-                        link.click();
-                        setNotification({ message: "Obrázek stažen.", type: "success" });
+                    }).then(blob => {
+                        haptics.trigger('success');
+                        const fileName = getFileName();
+                        setExportedBlob(blob);
+                        setExportedFileName(fileName);
+                        setExportModalOpen(true);
+                        setNotification(null);
+                        setTimeout(() => shareImage(blob, fileName), 200);
                     }).catch(err => {
+                        haptics.trigger('error');
                         console.error(err);
                         setNotification({ message: "Chyba při exportu.", type: "error" });
                     });
                 }, 100);
             };
 
+            const downloadImage = () => {
+                if (!exportedBlob) return;
+                const link = document.createElement('a');
+                link.download = exportedFileName || 'rozvrh.png';
+                link.href = URL.createObjectURL(exportedBlob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                haptics.trigger('success');
+                setNotification({ message: "Obrázek stažen.", type: "success" });
+                setExportModalOpen(false);
+            };
+
+            const shareImage = async (directBlob = null, directName = null) => {
+                const blobToShare = (directBlob instanceof Blob) ? directBlob : exportedBlob;
+                const nameToShare = (typeof directName === 'string' ? directName : exportedFileName) || 'rozvrh.png';
+                if (!blobToShare) return;
+                const file = new File([blobToShare], nameToShare, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Můj rozvrh',
+                            text: 'Podívej se na můj rozvrh!'
+                        });
+                        setExportModalOpen(false);
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.error(err);
+                            haptics.trigger('error');
+                            setNotification({ message: "Chyba při sdílení.", type: "error" });
+                        }
+                    }
+                } else {
+                    haptics.trigger('error');
+                    setNotification({ message: "Vaše zařízení nepodporuje sdílení.", type: "error" });
+                }
+            };
+
+            // Helper: Sloučí nová data s existujícími (nahradí DEMO, jinak přidá nové)
+            const mergeTimetableData = (newData) => {
+                setTimetableData(prev => {
+                    const isDEMO = prev.length === DEMO_DATA.length && prev.every((item, idx) => item.title === DEMO_DATA[idx].title);
+                    if (isDEMO) return newData;
+                    const existingTitles = new Set(prev.map(p => p.title));
+                    return [...prev, ...newData.filter(d => !existingTitles.has(d.title))];
+                });
+            };
+
             const processImportedData = (results) => {
                 setNotification({ message: "Zpracovávání dat...", type: "loading" });
 
-                setTimeout(() => {
-                    const parsedData = [];
-                    
-                    Object.entries(results).forEach(([id, json]) => {
-                        if (json.error) return;
-                        
-                        // Pokus o získání názvu předmětu z JSONu
-                        let title = id; // Fallback na ID
-                        try {
-                            // Hledáme první výskyt subjectAbbrev v datech
-                            const days = json.subjectScheduleTable?.days || [];
-                            for (const d of days) {
-                                for (const q of d.queues || []) {
-                                    for (const item of q.items || []) {
-                                        if (item.dto?.subjectAbbrev) {
-                                            title = item.dto.subjectAbbrev;
-                                            throw "Found"; // Break loops
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (e) {}
-                        
-                        parsedData.push({ title, data: json });
-                    });
+                const parsedData = Object.entries(results)
+                    .filter(([, json]) => !json.error)
+                    .map(([id, json]) => ({ title: findSubjectAbbrev(json) || id, data: json }));
 
-                    if (parsedData.length > 0) {
-                        setTimetableData(parsedData);
-                        setIsUploadModalOpen(false);
-                        setNotification({ message: `Úspěšně nahráno ${parsedData.length} předmětů.`, type: "success" });
-                    } else {
-                        setNotification({ message: "Nepodařilo se načíst žádná data.", type: "error" });
-                    }
-                }, 600);
+                if (parsedData.length > 0) {
+                    mergeTimetableData(parsedData);
+                    setIsUploadModalOpen(false);
+                    haptics.trigger('success');
+                    setNotification({ message: `Úspěšně nahráno ${parsedData.length} předmětů.`, type: "success" });
+                } else {
+                    haptics.trigger('error');
+                    setNotification({ message: "Nepodařilo se načíst žádná data.", type: "error" });
+                }
             };
 
             // Handlery
             const handleFileUpload = (event) => {
                 const files = Array.from(event.target.files);
                 if (files.length === 0) return;
-                const promises = files.map(file => {
-                    return new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            try {
-                                const json = JSON.parse(e.target.result);
-                                const title = file.name.replace(".json", "");
-                                resolve({ title, data: json.default || json });
-                            } catch (err) { resolve(null); }
-                        };
-                        reader.readAsText(file);
-                    });
-                });
-                Promise.all(promises).then(results => {
-                    const validData = results.filter(item => item !== null);
-                    setTimetableData(prev => {
-                        // If current data is DEMO, replace it with new uploads
-                        const isDEMO = prev.length === DEMO_DATA.length && prev.every((item, idx) => item.title === DEMO_DATA[idx].title);
-                        if (isDEMO) {
-                            return validData;
-                        }
-                        // Otherwise, append new uploads to existing data
-                        const existingTitles = new Set(prev.map(p => p.title));
-                        const newData = validData.filter(d => !existingTitles.has(d.title));
-                        return [...prev, ...newData];
-                    });
-                    setIsUploadModalOpen(false);
+
+                Promise.all(files.map(readFileAsJSON)).then(results => {
+                    const validData = results.filter(Boolean);
+                    if (validData.length > 0) {
+                        mergeTimetableData(validData);
+                        setIsUploadModalOpen(false);
+                    }
                 });
             };
 
             // Two-step delete all: perform deletion without browser confirm
             const performDeleteAll = () => {
+                haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                 // Pokud jsou aktuální data prázdná, načteme DEMO. Jinak je vymažeme.
                 if (timetableData.length === 0) {
                     setTimetableData(DEMO_DATA);
@@ -663,18 +918,15 @@
                 setIsUploadModalOpen(false);
                 setConfirmDeleteAll(false);
                 setShowUnusedClasses(false);
-                localStorage.setItem("showUnusedClasses", false);
             };
 
             const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
-            const handleDeleteSubject = (e, subjectName) => {
-                e.stopPropagation();
-                // deprecated: kept for compatibility but no confirm here
-            }
+
 
             // Two-step delete: perform deletion without browser confirm
             const performDeleteSubject = (subjectName) => {
+                haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                 setTimetableData(prev => prev.filter(fileItem => {
                     const containsSubject = fileItem.title.includes(subjectName) ||
                         (fileItem.data?.subjectScheduleTable?.days || []).some(d =>
@@ -693,10 +945,18 @@
 
             const [confirmDeleteSubject, setConfirmDeleteSubject] = useState(null);
 
-            // --- LONG PRESS LOGIC ---
-            const longPressTimer = useRef(null);
-            const isLongPress = useRef(false);
-            const touchStartPos = useRef({ x: 0, y: 0 });
+            // --- LONG PRESS LOGIC via Hook ---
+            const { handlers: touchHandlers, isLongPress } = useLongPress({
+                onLongPress: (e, subject, { x, y }) => {
+                    setTooltip({
+                        x,
+                        y,
+                        teacher: subject.teacherFull,
+                        room: subject.roomId,
+                        isTouch: true
+                    });
+                }
+            });
             const tooltipRef = useRef(null);
 
             // Výpočet pozice tooltipu podle jeho skutečné výšky
@@ -709,8 +969,8 @@
                         const height = el.offsetHeight;
                         const gap = 15; // Mezera od kurzoru
 
-                       if (tooltip.y + height + gap > window.innerHeight) {
-                           el.style.top = `${window.innerHeight - height - 10}px`;
+                        if (tooltip.y + height + gap > window.innerHeight) {
+                            el.style.top = `${window.innerHeight - height - 10}px`;
                         } else {
                             el.style.top = `${tooltip.y + gap}px`;
                         }
@@ -723,100 +983,11 @@
                 }
             }, [tooltip]);
 
-            const handleTouchStart = (e, subject) => {
-                isLongPress.current = false;
-                const touch = e.touches[0];
-                const x = touch.clientX;
-                const y = touch.clientY;
-                
-                touchStartPos.current = { x, y };
 
-                longPressTimer.current = setTimeout(() => {
-                    isLongPress.current = true;
-                    setTooltip({
-                        x: x,
-                        y: y,
-                        teacher: subject.teacherFull,
-                        room: subject.roomId,
-                        isTouch: true
-                    });
-                }, 500);
-            };
 
-            const handleTouchEnd = (e) => {
-                if (longPressTimer.current) {
-                    clearTimeout(longPressTimer.current);
-                    longPressTimer.current = null;
-                }
-                if (isLongPress.current) {
-                    if (e.cancelable) e.preventDefault();
-                    setTimeout(() => { isLongPress.current = false; }, 200);
-                }
-            };
 
-            const handleTouchMove = (e) => {
-                if (longPressTimer.current) {
-                    const touch = e.touches[0];
-                    const moveX = Math.abs(touch.clientX - touchStartPos.current.x);
-                    const moveY = Math.abs(touch.clientY - touchStartPos.current.y);
-                    
-                    if (moveX > 10 || moveY > 10) {
-                        clearTimeout(longPressTimer.current);
-                        longPressTimer.current = null;
-                    }
-                }
-            };
 
-            // --- VÝPOČET KONCE HODINY ---
-            const calculateEndTime = (startTime, duration) => {
 
-                startTime = startTime.substring(0, 5);
-                // Najdeme index, kde začíná hodina (např. "09:00" -> index 2)
-                const startIndex = timeSlots.findIndex(slot => slot.startsWith(startTime));
-
-                if (startIndex === -1) return "??:-1"; // Fallback pokud čas nesedí
-
-                // Spočítáme index konce
-                // Pokud začínáme na indexu 2 a trváme 2 hodiny, chceme sloty 2 a 3.
-                // Konec je konec slotu 3.
-                const endIndex = startIndex + duration - 1;
-
-                if (endIndex < timeSlots.length) {
-                    return timeSlots[endIndex].split("-")[1]; // Vrátí část za pomlčkou
-                }
-
-                // Fallback pro nestandardní časy
-                return "??:??";
-            };
-
-            // Data Processing
-            const formatSchedule = (scheduleTable) => {
-                const formatted = [];
-                if (!scheduleTable || !scheduleTable.days) return [];
-                scheduleTable.days.forEach((day) => {
-                    day.queues.forEach((queue) => {
-                        queue.items.forEach((item) => {
-                            if (item.used && item.dto) {
-                                const duration = item.duration || 2;
-                                formatted.push({
-                                    day: day.title,
-                                    startTime: item.dto.scheduleWindowBeginTime,
-                                    endTime: calculateEndTime(item.dto.scheduleWindowBeginTime, duration),
-                                    teacher: item.dto.teacherShortNamesString,
-                                    teacherFull: item.dto.teacherFullNamesString,
-                                    abbreviation: item.dto.subjectAbbrev,
-                                    isLecture: item.dto.lecture,
-                                    duration: duration,
-                                    activityId: item.dto.concreteActivityId,
-                                    roomId: item.dto.roomFullCodesString,
-                                    capacity: item.dto.concreteActivityCapacity,
-                                });
-                            }
-                        });
-                    });
-                });
-                return formatted;
-            };
 
             const allEntries = timetableData.map(({ data }) => formatSchedule(data.subjectScheduleTable)).flat();
 
@@ -828,38 +999,10 @@
                 }
             });
 
-            // Tetris Layout Logic
-            const calculateLayout = (entries) => {
-                const sorted = [...entries].sort((a, b) => {
-                    if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime);
-                    return b.duration - a.duration;
-                });
 
-                const rows = [];
-
-                const positioned = sorted.map(entry => {
-                    let rowIndex = -1;
-                    for (let r = 0; r < rows.length; r++) {
-                        if (entry.startTime >= rows[r]) {
-                            rowIndex = r;
-                            rows[r] = entry.endTime;
-                            break;
-                        }
-                    }
-                    if (rowIndex === -1) {
-                        rowIndex = rows.length;
-                        rows.push(entry.endTime);
-                    }
-                    return { ...entry, visualRowIndex: rowIndex };
-                });
-
-                return {
-                    items: positioned,
-                    rowCount: Math.max(1, rows.length)
-                };
-            };
 
             const pickClass = (entry) => {
+                haptics.trigger('selection');
                 setSelectedEntries((prev) => {
                     const newSet = new Set(prev);
                     const key = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.isLecture}~${entry.teacher}`;
@@ -870,6 +1013,7 @@
             };
 
             const toggleSubject = (subject) => {
+                haptics.trigger('light');
                 setSelectedSubjects((prev) => {
                     const newSet = new Set(prev);
                     if (newSet.has(subject)) newSet.delete(subject);
@@ -887,7 +1031,7 @@
                     const isSubjectVisible = selectedSubjects.size === 0 || selectedSubjects.has(entry.abbreviation);
                     const isCollisionVisible = showUnusedClasses || !isEntryHidden(entry);
 
-                    if ((isSubjectVisible && isCollisionVisible) || isSelected) {
+                    if (isSubjectVisible && (isCollisionVisible || isSelected)) {
                         if (grouped[entry.day]) grouped[entry.day].push(entry);
                     }
                 });
@@ -902,29 +1046,33 @@
                 return acc;
             }, {});
 
+            // Pre-computed lookup map: key -> entry (O(1) instead of O(n) find)
+            const entryByKey = new Map();
+            allEntries.forEach(e => {
+                const k = `${e.day}~${e.startTime}~${e.abbreviation}~${e.isLecture}~${e.teacher}`;
+                entryByKey.set(k, e);
+            });
+
             const isEntryHidden = (entry) => {
                 const entryKey = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.isLecture}~${entry.teacher}`;
                 for (const selectedEntryKey of selectedEntries) {
-                    // skip comparing the entry against itself (by key)
                     if (selectedEntryKey === entryKey) continue;
-                    const selectedEntry = allEntries.find(e => `${e.day}~${e.startTime}~${e.abbreviation}~${e.isLecture}~${e.teacher}` === selectedEntryKey);
+                    const selectedEntry = entryByKey.get(selectedEntryKey);
                     if (selectedEntry) {
                         if (entry.abbreviation === selectedEntry.abbreviation && entry.isLecture === selectedEntry.isLecture) return true;
-                        if (entry.startTime === selectedEntry.startTime && entry.day === selectedEntry.day) return true;
+
+                        if (entry.day === selectedEntry.day) {
+                            const startA = getTimeSlotIndex(entry.startTime.substring(0, 5));
+                            const endA = startA + entry.duration;
+                            const startB = getTimeSlotIndex(selectedEntry.startTime.substring(0, 5));
+                            const endB = startB + selectedEntry.duration;
+
+                            if (startA < endB && endA > startB) return true;
+                        }
                     }
                 }
                 return false;
             };
-
-            const getTimeSlotIndex = (time) => {
-                return timeSlots.findIndex(slot => slot.startsWith(time)) + 2;
-            }
-
-            const toggleUnusedClasses = () => {
-                const newVal = !showUnusedClasses;
-                setShowUnusedClasses(newVal);
-                localStorage.setItem("showUnusedClasses", newVal);
-            }
 
             const groupedData = groupAndFilterEntries();
             const DAY_COL_WIDTH = slotWidth - 4;
@@ -933,32 +1081,30 @@
             const TABLE_WIDTH = DAY_COL_WIDTH + (timeSlots.length * SLOT_WIDTH);
             const SCREEN_WIDTH = TABLE_WIDTH + 4;
 
-            const TABLE_MIN_WIDTH = (SLOT_MIN-4) + (timeSlots.length * SLOT_MIN);
+            const TABLE_MIN_WIDTH = (SLOT_MIN - 4) + (timeSlots.length * SLOT_MIN);
 
             return (
                 <div className="flex-1 w-full mx-auto pt-4 flex flex-col items-center" style={{ maxWidth: SCREEN_WIDTH }}>
-
                     <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Správa rozvrhu">
                         <div className="flex flex-col gap-6">
-                            
+
                             {/* Sekce pro automatický import */}
                             <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                                
+
                                 <div className="flex flex-col gap-3 items-center">
                                     <div className="text-center w-full">
                                         <div className="flex justify-center gap-2 flex-wrap">
                                             {!isTouchDevice ? (
-                                                <a href={bookmarkletCode} className="bg-yellow-700 hover:bg-yellow-600 text-yellow-50 font-bold py-2 px-4 rounded-full border-2 border-yellow-600 cursor-grab active:cursor-grabbing shadow-lg transition-all" title="Přetáhni mě na lištu záložek" onClick={e => e.preventDefault()}>
+                                                <a href={bookmarkletCode} className="bg-yellow-600 hover:bg-yellow-700 text-yellow-100 font-bold py-2 px-4 rounded-full border-2 border-yellow-600 cursor-grab active:cursor-grabbing shadow-lg transition-all" title="Přetáhni mě na lištu záložek" onClick={e => e.preventDefault()}>
                                                     ⚡ Rychlý import z Edisonu
                                                 </a>
                                             ) : (
-                                                <button 
-                                                    onClick={copyToClipboard} 
-                                                    className={`font-bold py-2 px-4 rounded-full border-2 shadow-lg transition-all duration-300 flex items-center gap-2 ${
-                                                        copyStatus === 'success' ? 'bg-green-600 border-green-600 text-green-50 scale-105' :
+                                                <button
+                                                    onClick={copyToClipboard}
+                                                    className={`font-bold py-2 px-4 rounded-full border-2 shadow-lg transition-all duration-300 flex items-center gap-2 ${copyStatus === 'success' ? 'bg-green-600 border-green-600 text-green-50 scale-105' :
                                                         copyStatus === 'error' ? 'bg-red-600 border-red-600 text-red-50 shake' :
-                                                        'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200'
-                                                    }`}
+                                                            'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200'
+                                                        }`}
                                                 >
                                                     {copyStatus === 'success' ? (
                                                         <><i className="fas fa-check"></i> Zkopírováno!</>
@@ -973,29 +1119,34 @@
                                     </div>
 
                                     <div className="w-full text-left bg-gray-800/50 p-3 rounded text-xs text-gray-400">
-                                        <p className="font-bold mb-1 text-gray-300">Návod na použití:</p>
                                         {isTouchDevice ? (
-                                            <ol className="list-decimal pl-4 space-y-1">
-                                                <li>Klikněte na <b>Zkopírovat skript</b>.</li>
-                                                <li>Vytvořte si v prohlížeči novou záložku (složka oblíbené).</li>
-                                                <li>Jděte do úpravy této záložky a místo URL vložte zkopírovaný kód.</li>
-                                                <li>Klikněte do adresního řádku, klepněte na záložku.</li>
-                                                <li>Přihlašte se do Edisonu.</li>
-                                                <li>Znovu otevřete záložku.</li>
-                                                <li>Data se automaticky importují.</li>
-                                                <li>Záložku můžete odstranit.</li>
+                                            <span>
+                                                <p className="font-bold mb-1 text-gray-300">Rychlý import z Edisonu:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li>Klikněte na <b>Zkopírovat skript</b>.</li>
+                                                    <li>Vytvořte si v prohlížeči novou záložku (složka oblíbené).</li>
+                                                    <li>Jděte do úpravy této záložky a místo URL vložte zkopírovaný kód.</li>
+                                                    <li>Klikněte do adresního řádku, klepněte na záložku.</li>
+                                                    <li>Přihlašte se do Edisonu.</li>
+                                                    <li>Znovu otevřete záložku.</li>
+                                                    <li>Data se automaticky importují.</li>
+                                                    <li>Záložku můžete odstranit.</li>
 
-                                            </ol>
+                                                </ol>
+                                            </span>
                                         ) : (
-                                            <ol className="list-decimal pl-4 space-y-1">
-                                                <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
-                                                <span className="ml-2 text-gray-500 text-[0.7rem]">→ pokud lištu nevidíte, stiskněte <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Ctrl+Shift+B</code>/<code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Cmd+Shift+B</code></span>
-                                                <li>Otevřete záložku.</li>
-                                                <li>Přihlaste se do Edisonu.</li>
-                                                <li>Znovu otevřete záložku.</li>
-                                                <li>Data se automaticky importují.</li>
-                                                <li>Záložku můžete odstranit.</li>
-                                            </ol>
+                                            <span>
+                                                <p className="font-bold mb-1 text-gray-300">Rychlý import z Edisonu:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
+                                                    <span className="ml-2 text-gray-500 text-[0.7rem]">→ pokud lištu nevidíte, stiskněte <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Ctrl+Shift+B</code>/<code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Cmd+Shift+B</code></span>
+                                                    <li>Otevřete záložku.</li>
+                                                    <li>Přihlaste se do Edisonu.</li>
+                                                    <li>Znovu otevřete záložku.</li>
+                                                    <li>Data se automaticky importují.</li>
+                                                    <li>Záložku můžete odstranit.</li>
+                                                </ol>
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -1007,12 +1158,12 @@
                                 <label htmlFor="fileInput" className="inline-flex items-center bg-blue-700 hover:bg-blue-600 text-blue-100 font-bold py-2 px-6 rounded-full border-2 border-blue-600 cursor-pointer shadow-lg transition-all hover:scale-105">
                                     <i className="fas fa-upload mr-2"></i>Vybrat soubory
                                 </label>
-                                <label className="block text-xs font-medium text-gray-400 text-center max-w-sm">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br/>Nahrané soubory se uloží do paměti prohlížeče.</label>
+                                <label className="block text-xs font-medium text-gray-400 text-center max-w-sm">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br />Nahrané soubory se uloží do paměti prohlížeče.</label>
                             </div>
 
                             <div className="w-full">
                                 <button onClick={handleExportJpg} className="w-full bg-emerald-700 hover:bg-emerald-600 text-emerald-100 font-bold py-2 px-4 rounded-full border-2 border-emerald-600 shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105">
-                                    <i className="fas fa-camera"></i> Exportovat tabulku (.jpg)
+                                    <i className="fas fa-camera"></i> Exportovat tabulku
                                 </button>
                             </div>
 
@@ -1022,6 +1173,7 @@
                                         if (confirmDeleteAll) {
                                             performDeleteAll();
                                         } else {
+                                            haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                                             setConfirmDeleteAll(true);
                                         }
                                     }}
@@ -1049,11 +1201,24 @@
                         </div>
                     </Modal>
 
+                    <Modal isOpen={exportModalOpen} onClose={() => setExportModalOpen(false)} title="Obrázek vygenerován">
+                        <div className="flex gap-4 justify-center p-2">
+                            <button onClick={downloadImage} className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-4 px-4 rounded-xl border-2 border-zinc-500 shadow-lg flex flex-col items-center justify-center gap-2 transition-all hover:scale-105">
+                                <i className="fas fa-download text-3xl mb-1"></i>
+                                <span>Stáhnout</span>
+                            </button>
+                            <button onClick={shareImage} className="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-xl border-2 border-blue-500 shadow-lg flex flex-col items-center justify-center gap-2 transition-all hover:scale-105">
+                                <i className="fas fa-share-from-square text-3xl mb-1"></i>
+                                <span>Otevřít v…</span>
+                            </button>
+                        </div>
+                    </Modal>
+
                     <div className="mb-8 mt-2 px-5 w-full flex flex-col gap-3 items-center">
                         <h1 className="text-2xl font-bold text-white w-full text-center">VŠB Timetable Picker (HTML)</h1>
                         <div className="flex flex-wrap gap-4 items-center w-full justify-center">
-                            <label className="inline-flex items-center cursor-pointer bg-gray-800 hover:bg-gray-700 text-gray-200 border-2 border-gray-700 px-4 py-2 rounded-full transition-all shadow-lg flex-shrink-0 select-none hover:scale-105">
-                                <input type="checkbox" onChange={toggleUnusedClasses} checked={showUnusedClasses} className="sr-only peer" />
+                            <label className="inline-flex items-center cursor-pointer bg-gray-800 [@media(hover:hover)]:hover:bg-gray-700 active:bg-gray-700 text-gray-200 border-2 border-gray-700 px-4 py-2 rounded-full transition-all shadow-lg flex-shrink-0 select-none [@media(hover:hover)]:hover:scale-105 active:scale-105">
+                                <input type="checkbox" onChange={() => { haptics.trigger('light'); setShowUnusedClasses(v => !v); }} checked={showUnusedClasses} className="sr-only peer" />
                                 <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                 <span className="ml-3 font-bold text-nowrap">Zobrazit skryté hodiny</span>
                             </label>
@@ -1084,6 +1249,7 @@
                                         if (confirmDeleteSubject === name) {
                                             performDeleteSubject(name);
                                         } else {
+                                            haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
                                             setConfirmDeleteSubject(name);
                                         }
                                     }}
@@ -1098,57 +1264,59 @@
                         ))}
                     </div>
 
-                    
+
 
                     <div className="w-full overflow-x-auto">
                         <div className="inline-flex">
-                        <div className="flex flex-col">
-                        <div id="timetable-content" className="bg-[#242424] inline-block">
-                            <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
-                                <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
-                                {timeSlots.map((slot, index) => (
-                                    <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{ width: SLOT_WIDTH }}>
-                                        {slot.split("-").map((part, i) => <div key={i}>{part}</div>)}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="relative flex flex-col gap-1 select-none" style={{ minWidth: TABLE_WIDTH }}>
-                        {currentTimePosition && (
-                            <div className="absolute w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)] no-export" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px`, height: 'calc(100% + 3.5rem)' }} />
-                        )}
-
-                        {["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek"].map((day) => {
-                            const rawEntries = groupedData[day] || [];
-                            const { items: positionedEntries, rowCount } = calculateLayout(rawEntries);
-
-                            return (
-                                <div key={day} className="relative bg-gray-800 border-b border-gray-700 grid"
-                                    style={{
-                                        width: TABLE_WIDTH,
-                                        gridTemplateColumns: `${DAY_COL_WIDTH}px repeat(${timeSlots.length}, ${SLOT_WIDTH}px)`,
-                                        gridTemplateRows: `repeat(${rowCount}, ${ROW_HEIGHT}px)`
-                                    }}>
-
-                                    <div className="col-start-1 flex items-center justify-center bg-sky-900 text-sky-200 font-bold text-lg border-r border-gray-600 z-10"
-                                        style={{ gridRow: `1 / span ${rowCount}` }}>
-                                        {day.substring(0, 2)}
-                                    </div>
-
-                                    <div className="absolute inset-0 pointer-events-none z-0">
-                                        {timeSlots.map((_, i) => (
-                                            <div key={i} className="absolute top-0 bottom-0 border-r border-gray-700/40" style={{ left: DAY_COL_WIDTH + ((i + 1) * SLOT_WIDTH) }}></div>
+                            <div className="flex flex-col">
+                                <div id="timetable-content" className="bg-[#242424] inline-block">
+                                    <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
+                                        <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
+                                        {timeSlots.map((slot, index) => (
+                                            <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{ width: SLOT_WIDTH }}>
+                                                {slot.split("-").map((part, i) => <div key={i}>{part}</div>)}
+                                            </div>
                                         ))}
                                     </div>
+                                    <div className="relative flex flex-col gap-1 select-none" style={{ minWidth: TABLE_WIDTH }}>
+                                        {currentTimePosition && (
+                                            <div className="absolute w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)] no-export" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px`, height: 'calc(100% + 3.5rem)' }} />
+                                        )}
 
-                                    {positionedEntries.map((subject, index) => {
-                                        const key = `${subject.day}~${subject.startTime}~${subject.abbreviation}~${subject.isLecture}~${subject.teacher}`;
-                                        const isSelected = selectedEntries.has(key);
-                                        const colStart = getTimeSlotIndex(subject.startTime.substring(0, 5));
+                                        {["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek"].map((day) => {
+                                            const rawEntries = groupedData[day] || [];
+                                            const { items: positionedEntries, rowCount } = calculateLayout(rawEntries);
 
-                                        return (
-                                            <div
-                                                key={index}
-                                                className={`
+                                            return (
+                                                <div key={day} className="relative bg-gray-800 border-b border-gray-700 grid"
+                                                    style={{
+                                                        width: TABLE_WIDTH,
+                                                        gridTemplateColumns: `${DAY_COL_WIDTH}px repeat(${timeSlots.length}, ${SLOT_WIDTH}px)`,
+                                                        gridTemplateRows: `repeat(${rowCount}, ${ROW_HEIGHT}px)`
+                                                    }}>
+
+                                                    <div className="col-start-1 flex items-center justify-center bg-sky-900 text-sky-200 font-bold text-lg border-r border-gray-600 z-10"
+                                                        style={{ gridRow: `1 / span ${rowCount}` }}>
+                                                        {day.substring(0, 2)}
+                                                    </div>
+
+                                                    <div className="absolute inset-0 pointer-events-none z-0">
+                                                        {timeSlots.map((_, i) => (
+                                                            <div key={i} className="absolute top-0 bottom-0 border-r border-gray-700/40" style={{ left: DAY_COL_WIDTH + ((i + 1) * SLOT_WIDTH) }}></div>
+                                                        ))}
+                                                    </div>
+
+                                                    {positionedEntries.map((subject, index) => {
+                                                        const key = `${subject.day}~${subject.startTime}~${subject.abbreviation}~${subject.isLecture}~${subject.teacher}`;
+                                                        const isSelected = selectedEntries.has(key);
+                                                        const colStart = getTimeSlotIndex(subject.startTime.substring(0, 5));
+                                                        // Unique React key: use activityId if available to prevent duplicate key issues
+                                                        const reactKey = subject.activityId ? `${subject.abbreviation}-${subject.activityId}` : `${key}-${index}`;
+
+                                                        return (
+                                                            <div
+                                                                key={reactKey}
+                                                                className={`
                                                     relative z-10 m-[2px] border-2 rounded-md cursor-pointer overflow-hidden text-xs
                                                     transition-all duration-150 hover:z-20 hover:shadow-xl hover:scale-105
                                                     ${showUnusedClasses && "select-none"} 
@@ -1158,65 +1326,59 @@
                                                     ${isSelected && subject.isLecture ? "!bg-red-700" : ""} 
                                                     ${isSelected && !subject.isLecture ? "!bg-sky-700" : ""}
                                                 `}
-                                                style={{
-                                                    gridColumnStart: colStart,
-                                                    gridColumnEnd: colStart + subject.duration,
-                                                    gridRow: subject.visualRowIndex + 1
-                                                }}
+                                                                style={{
+                                                                    gridColumnStart: colStart,
+                                                                    gridColumnEnd: colStart + subject.duration,
+                                                                    gridRow: subject.visualRowIndex + 1
+                                                                }}
 
-                                                onClick={(e) => {
-                                                    if (isLongPress.current) return;
-                                                    if (!isEntryHidden(subject)) {
-                                                        pickClass(subject);
-                                                    }
-                                                }}
+                                                                onClick={(e) => {
+                                                                    if (isLongPress.current) return;
+                                                                    if (!isEntryHidden(subject)) {
+                                                                        pickClass(subject);
+                                                                    }
+                                                                }}
 
-                                                onContextMenu={(e) => {
-                                                    e.preventDefault();
-                                                    setTooltip({
-                                                        x: e.clientX,
-                                                        y: e.clientY,
-                                                        teacher: subject.teacherFull,
-                                                        room: subject.roomId,
-                                                        isTouch: false
-                                                    });
-                                                }}
+                                                                onContextMenu={(e) => {
+                                                                    e.preventDefault();
+                                                                    setTooltip({
+                                                                        x: e.clientX,
+                                                                        y: e.clientY,
+                                                                        teacher: subject.teacherFull,
+                                                                        room: subject.roomId,
+                                                                        isTouch: false
+                                                                    });
+                                                                }}
 
-                                                onTouchStart={(e) => handleTouchStart(e, subject)}
-                                                onTouchEnd={handleTouchEnd}
-                                                onTouchMove={handleTouchMove}
+                                                                onTouchStart={(e) => touchHandlers.onTouchStart(e, subject)}
+                                                                onTouchEnd={touchHandlers.onTouchEnd}
+                                                                onTouchMove={touchHandlers.onTouchMove}
 
 
-                                            >
-                                                <div className="pl-0.5 py-0.5 pr-2 flex flex-col h-full justify-between">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="hidden"
-                                                        checked={isSelected}
-                                                        readOnly // Přidáno, aby React nekřičel, že input nemá onChange
-                                                        disabled={isEntryHidden(subject)}
-                                                    />
-                                                    <div className="flex justify-between items-start">
-                                                        <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
-                                                            {subject.abbreviation}
-                                                        </span>
-                                                        <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>
-                                                        <span className="font-mono opacity-70">{subject.isLecture ? "P" : "C"}</span>
-                                                    </div>
-                                                    <div className="pl-1.5 font-semibold truncate" title={subject.teacher}>{subject.teacher}</div>
-                                                    <div></div>
+                                                            >
+                                                                <div className="pl-0.5 py-0.5 pr-2 flex flex-col h-full">
+
+                                                                    <div className="flex justify-between items-start">
+                                                                        <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
+                                                                            {subject.abbreviation}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>
+                                                                        <span className="font-mono opacity-70">{subject.isLecture ? "P" : "C"}</span>
+                                                                    </div>
+                                                                    <div className="flex-1 flex items-center justify-center"><span className="pl-1.5 font-semibold truncate" title={subject.teacher}>{subject.teacher}</span></div>
+
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            );
-                        })}
-                        </div>
-                        </div>
-                        <div className="h-14 w-full shrink-0"></div>
-                        </div>
-                        <div style={{ width: TABLE_WIDTH === TABLE_MIN_WIDTH ? 20 : 0 }} className="shrink-0"></div>
+                                <div className="h-14 w-full shrink-0"></div>
+                            </div>
+                            <div style={{ width: TABLE_WIDTH === TABLE_MIN_WIDTH ? 20 : 0 }} className="shrink-0"></div>
                         </div>
                     </div>
                     {tooltip && (
@@ -1247,27 +1409,27 @@
                                 touchAction: 'none',
                                 animation: isClosing ? 'modalOut 0.1s ease-in forwards' : 'modalIn 0.2s ease-out forwards'
                             }}>
-                            <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
-                            <div className="text-sm font-medium">{tooltip.teacher}</div>
-                            
-                            <div className="font-bold text-xs text-gray-400 mt-3 mb-1 uppercase tracking-wider">Místnost</div>
-                            <div className="text-sm font-medium">
-                                {tooltip.roomUrl ? (
-                                    <a href={tooltip.roomUrl} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
-                                        {tooltip.room} <i className="fas fa-external-link-alt text-[10px] ml-1 opacity-70"></i>
-                                    </a>
-                                ) : tooltip.room}
+                                <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
+                                <div className="text-sm font-medium">{tooltip.teacher}</div>
+
+                                <div className="font-bold text-xs text-gray-400 mt-3 mb-1 uppercase tracking-wider">Místnost</div>
+                                <div className="text-sm font-medium">
+                                    {tooltip.roomUrl ? (
+                                        <a href={tooltip.roomUrl} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
+                                            {tooltip.room} <i className="fas fa-external-link-alt text-[10px] ml-1 opacity-70"></i>
+                                        </a>
+                                    ) : tooltip.room}
+                                </div>
+
+
+                                {/* Tlačítko pro zavření */}
+                                <button
+                                    onClick={closeTooltip}
+                                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
+                                >
+                                    <i className="fas fa-times text-xs"></i>
+                                </button>
                             </div>
-
-
-                            {/* Tlačítko pro zavření */}
-                            <button
-                                onClick={closeTooltip}
-                                className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
-                            >
-                                <i className="fas fa-times text-xs"></i>
-                            </button>
-                        </div>
                         </>
                     )}
 
