@@ -348,7 +348,7 @@
             );
         };
 
-        const bookmarkletCode = `javascript:(function(){var s=document.createElement('script');s.src='https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v='+Date.now();document.body.appendChild(s);})();`;
+        const bookmarkletCode = `javascript:(function(){var t="https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu";if(!location.href.startsWith(t)){window.location.href=t;}else{window._vsbWin=window.open("https://kuba799500.github.io/vsb_timetable_picker_html","vsb_timetable_picker_win");var s=document.createElement("script");s.src="https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v="+Date.now();document.body.appendChild(s);}})();`;
 
         const timeSlots = [
             "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
@@ -736,7 +736,7 @@
                         try {
                             // Použijeme CORS proxy, protože API mapy.vsb.cz neumožňuje přímé volání z prohlížeče (CORS error)
                             const targetUrl = `https://mapy.vsb.cz/maps/api/v0/rooms/autocomplete?query=${encodeURIComponent(tooltip.room)}&language=cs`;
-                            const res = await fetch(`https://corsproxy.io/?${targetUrl}`, { signal: controller.signal });
+                            const res = await fetch(`https://cors-proxy.jjzeleny.workers.dev?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
                             if (res.ok) {
                                 const data = await res.json();
                                 if (Array.isArray(data) && data.length > 0) {
