@@ -1105,7 +1105,8 @@
             });
             const [isVariantsModalOpen, setIsVariantsModalOpen] = useState(false);
             const [editingVariantId, setEditingVariantId] = useState(null);
-            
+            const [confirmDeleteVariantId, setConfirmDeleteVariantId] = useState(null);
+
             // Hash current selected entries
             const selectedItemsForHash = Array.from(selectedEntries).map(k => entryByKey.get(k)).filter(Boolean);
             const currentHash = encodeScheduleBase62(selectedItemsForHash);
@@ -1113,7 +1114,10 @@
 
             const hasProcessedUrl = useRef(false);
             const [urlVariantToProcess, setUrlVariantToProcess] = useState(null);
-            const [pendingVariant, setPendingVariant] = useState(null);
+
+            const [pendingUnsavedCurrent, setPendingUnsavedCurrent] = useState(null);
+            const [pendingImportModal, setPendingImportModal] = useState(null);
+            const [resumeAction, setResumeAction] = useState(null);
 
             useEffect(() => {
                 if (hasProcessedUrl.current || allEntries.length === 0) return;
@@ -1122,7 +1126,7 @@
                 if (variantParam) {
                     hasProcessedUrl.current = true;
                     window.history.replaceState(null, '', window.location.pathname);
-                    
+
                     const decoded = decodeScheduleBase62(variantParam);
                     if (decoded.length > 0) {
                         let missingCount = 0;
@@ -1136,7 +1140,7 @@
                                 missingCount++;
                             }
                         });
-                        
+
                         setUrlVariantToProcess({ keys: matchingKeys, missing: missingCount, hash: variantParam });
                     }
                 }
@@ -1146,44 +1150,27 @@
             useEffect(() => {
                 if (urlVariantToProcess) {
                     if (!isCurrentSaved && selectedEntries.size > 0) {
-                        setPendingVariant({ keys: urlVariantToProcess.keys, isUrl: true, missing: urlVariantToProcess.missing });
+                        setPendingUnsavedCurrent({ keys: urlVariantToProcess.keys, isUrl: true, missing: urlVariantToProcess.missing, hash: urlVariantToProcess.hash });
                     } else {
-                        applyVariantDirectly(urlVariantToProcess.keys, true, urlVariantToProcess.missing);
+                        if (savedVariants.some(v => v.hash === urlVariantToProcess.hash) || currentHash === urlVariantToProcess.hash) {
+                            applyVariantDirectly(urlVariantToProcess.keys);
+                        } else {
+                            setPendingImportModal(urlVariantToProcess);
+                        }
                     }
-                    setUrlVariantToProcess(null); // Processed
+                    setUrlVariantToProcess(null);
                 }
-            }, [urlVariantToProcess, isCurrentSaved, selectedEntries.size]);
+            }, [urlVariantToProcess, isCurrentSaved, selectedEntries.size, savedVariants, currentHash]);
 
-            const applyVariantDirectly = (keysToApply, isUrl = false, missing = 0) => {
+            const applyVariantDirectly = (keysToApply) => {
                 const newSet = new Set(keysToApply);
                 setSelectedEntries(newSet);
-                setPendingVariant(null);
-                
-                if (isUrl) {
-                    // Odvybrat předměty které nejsou v URL variantě, pokud chceme "odvybrat co nebylo nasdílené".
-                    // Uživatel říká: "Předměty, které má uživatel importované, ale nebyly nasdílené odkazem se odvyberou, pokud některé hodiny byly vybrány."
-                    // To znamená, že selectedSubjects se musí nastavit pouze na ty předměty, které jsou ve variantě, nebo se ponechat všechny?
-                    // "Odvyberou" implies setting selectedSubjects.
-                    setSelectedSubjects(prev => {
-                        const s = new Set(); // Reset to empty => meaning all subjects visible IF it's empty!
-                        // Wait, if selectedSubjects is empty, ALL subjects are shown.
-                        // To deselect unshared, we must explicitly select only the shared ones.
-                        keysToApply.forEach(k => {
-                            const entry = entryByKey.get(k);
-                            if (entry) s.add(entry.abbreviation);
-                        });
-                        // If s is empty, and we return empty, ALL are shown. We want to show NO subjects if none shared?
-                        // Actually if we just set it to `s`, it will show exactly what was shared.
-                        return s;
-                    });
-                    
-                    if (missing > 0) {
-                        setNotification({ message: `Nenalezeno předmětů: ${missing}`, type: "error" });
-                    }
-                }
+                setPendingUnsavedCurrent(null);
+                setPendingImportModal(null);
             };
 
             const handleApplySavedVariant = (hash) => {
+                setIsVariantsModalOpen(false);
                 if (hash === currentHash) return;
                 const decoded = decodeScheduleBase62(hash);
                 const matchingKeys = [];
@@ -1195,7 +1182,7 @@
                 });
 
                 if (!isCurrentSaved && selectedEntries.size > 0) {
-                    setPendingVariant({ keys: matchingKeys, isUrl: false, missing: 0 });
+                    setPendingUnsavedCurrent({ keys: matchingKeys, isUrl: false, missing: 0 });
                 } else {
                     applyVariantDirectly(matchingKeys);
                 }
@@ -1372,7 +1359,24 @@
                     </Modal>
 
                     {/* Varianty Modal */}
-                    <Modal isOpen={isVariantsModalOpen} onClose={() => { setIsVariantsModalOpen(false); setEditingVariantId(null); }} title="Varianty rozvrhu">
+                    <Modal isOpen={isVariantsModalOpen} onClose={() => {
+                        setIsVariantsModalOpen(false);
+                        setEditingVariantId(null);
+                        setConfirmDeleteVariantId(null);
+
+                        if (resumeAction) {
+                            if (resumeAction.type === 'SHOW_IMPORT_MODAL') {
+                                if (savedVariants.some(v => v.hash === resumeAction.payload.hash) || currentHash === resumeAction.payload.hash) {
+                                    applyVariantDirectly(resumeAction.payload.keys);
+                                } else {
+                                    setPendingImportModal(resumeAction.payload);
+                                }
+                            } else if (resumeAction.type === 'APPLY_VARIANT') {
+                                applyVariantDirectly(resumeAction.payload.keys);
+                            }
+                            setResumeAction(null);
+                        }
+                    }} title="Varianty rozvrhu">
                         <div className="flex flex-col gap-4">
                             <button onClick={handleSaveCurrentVariant} className={`w-full font-bold py-3 px-4 rounded-full border-2 shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105 ${currentHash === "" || savedVariants.some(v => v.hash === currentHash) ? 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed opacity-50' : 'bg-emerald-700 hover:bg-emerald-600 border-emerald-600 text-emerald-100'}`} disabled={currentHash === "" || savedVariants.some(v => v.hash === currentHash)}>
                                 <i className="fas fa-plus"></i> Uložit aktuální variantu
@@ -1387,10 +1391,10 @@
                                         <div key={variant.hash} className={`flex items-center justify-between p-3 rounded-lg border-2 ${isActive ? 'bg-blue-900/40 border-blue-600' : 'bg-gray-800/80 border-gray-700 hover:border-gray-600'} transition-all`}>
                                             <div className="flex-1 mr-2 cursor-pointer" onClick={() => { if (!isEditing) handleApplySavedVariant(variant.hash); }}>
                                                 {isEditing ? (
-                                                    <input 
-                                                        type="text" 
+                                                    <input
+                                                        type="text"
                                                         autoFocus
-                                                        defaultValue={variant.name} 
+                                                        defaultValue={variant.name}
                                                         onBlur={(e) => {
                                                             const newName = e.target.value.trim() || `Varianta`;
                                                             setSavedVariants(savedVariants.map(v => v.hash === variant.hash ? { ...v, name: newName } : v));
@@ -1399,7 +1403,7 @@
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') e.target.blur();
                                                         }}
-                                                        className="w-full bg-gray-900 text-white px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none" 
+                                                        className="w-full bg-gray-900 text-white px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
                                                 ) : (
@@ -1410,11 +1414,26 @@
                                                 <button onClick={(e) => { e.stopPropagation(); setEditingVariantId(variant.hash); }} className="p-2 text-gray-400 hover:text-white transition-colors" title="Přejmenovat">
                                                     <i className="fas fa-pencil-alt"></i>
                                                 </button>
-                                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?v=' + variant.hash); setNotification({message: 'Odkaz zkopírován do schránky', type: 'success'}); }} className="p-2 text-blue-400 hover:text-blue-300 transition-colors" title="Sdílet">
+                                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?v=' + variant.hash); setNotification({ message: 'Odkaz zkopírován do schránky', type: 'success' }); }} className="p-2 text-blue-400 hover:text-blue-300 transition-colors" title="Sdílet">
                                                     <i className="fas fa-share-alt"></i>
                                                 </button>
-                                                <button onClick={(e) => { e.stopPropagation(); if (window.confirm('Opravdu chcete smazat tuto variantu?')) setSavedVariants(savedVariants.filter(v => v.hash !== variant.hash)); }} className="p-2 text-red-400 hover:text-red-300 transition-colors" title="Smazat">
-                                                    <i className="fas fa-times"></i>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (confirmDeleteVariantId === variant.hash) {
+                                                            setSavedVariants(savedVariants.filter(v => v.hash !== variant.hash));
+                                                            setConfirmDeleteVariantId(null);
+                                                        } else {
+                                                            setConfirmDeleteVariantId(variant.hash);
+                                                        }
+                                                    }}
+                                                    onMouseLeave={() => {
+                                                        if (confirmDeleteVariantId === variant.hash) setConfirmDeleteVariantId(null);
+                                                    }}
+                                                    className={`p-2 transition-colors ${confirmDeleteVariantId === variant.hash ? 'bg-red-700 hover:bg-red-600 text-red-100 rounded px-2 text-sm font-bold shadow-lg ml-1' : 'text-red-400 hover:text-red-300'}`}
+                                                    title="Smazat"
+                                                >
+                                                    {confirmDeleteVariantId === variant.hash ? "Smazat?" : <i className="fas fa-times"></i>}
                                                 </button>
                                             </div>
                                         </div>
@@ -1424,32 +1443,78 @@
                         </div>
                     </Modal>
 
-                    {/* Unsaved Changes Confirmation Modal */}
-                    {pendingVariant && (
-                        <Modal isOpen={true} onClose={() => setPendingVariant(null)} title="Neuložené změny">
+                    {/* Step 1: Unsaved Changes Confirmation Modal */}
+                    {pendingUnsavedCurrent && (
+                        <Modal isOpen={true} onClose={() => setPendingUnsavedCurrent(null)} title="Neuložené změny">
                             <div className="flex flex-col gap-4">
-                                {pendingVariant.missing > 0 && (
-                                    <div className="bg-red-900/30 border border-red-500 p-3 rounded text-red-200 text-sm">
-                                        <b>Upozornění:</b> Ve variantě chybí data k {pendingVariant.missing} předmětům. Buď je nemáte importované, nebo nejsou v aktuálním semestru.
-                                    </div>
-                                )}
                                 <p className="text-gray-300">
-                                    Aktuální rozvrh není uložen. Přejete si jej před přepsáním uložit jako novou variantu?
+                                    Aktuální rozvrh není uložen. Přejete si jej před načtením uložit jako novou variantu?
                                 </p>
                                 <div className="flex flex-col sm:flex-row justify-end gap-3 mt-2">
-                                    <button onClick={() => setPendingVariant(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold">
+                                    <button onClick={() => setPendingUnsavedCurrent(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold">
                                         Zrušit
                                     </button>
                                     <button onClick={() => {
-                                        applyVariantDirectly(pendingVariant.keys, pendingVariant.isUrl, pendingVariant.missing);
+                                        const { keys, isUrl, missing, hash } = pendingUnsavedCurrent;
+                                        setPendingUnsavedCurrent(null);
+                                        if (isUrl) {
+                                            setPendingImportModal({ keys, missing, hash });
+                                        } else {
+                                            applyVariantDirectly(keys);
+                                        }
                                     }} className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded-lg font-bold">
                                         Přepsat bez uložení
                                     </button>
                                     <button onClick={() => {
+                                        const { keys, isUrl, missing, hash } = pendingUnsavedCurrent;
                                         handleSaveCurrentVariant();
-                                        applyVariantDirectly(pendingVariant.keys, pendingVariant.isUrl, pendingVariant.missing);
+                                        setPendingUnsavedCurrent(null);
+                                        setResumeAction({
+                                            type: isUrl ? 'SHOW_IMPORT_MODAL' : 'APPLY_VARIANT',
+                                            payload: isUrl ? { keys, missing, hash } : { keys }
+                                        });
+                                        setIsVariantsModalOpen(true);
                                     }} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold">
                                         Uložit a pokračovat
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
+
+                    {/* Step 2: Imported Variant Modal */}
+                    {pendingImportModal && (
+                        <Modal isOpen={true} onClose={() => setPendingImportModal(null)} title="Importovaná varianta">
+                            <div className="flex flex-col gap-4">
+                                {pendingImportModal.missing > 0 && (
+                                    <div className="bg-red-900/30 border border-red-500 p-3 rounded text-red-200 text-sm">
+                                        <b>Upozornění:</b> Ve variantě chybí data k {pendingImportModal.missing} předmětům. Buď je nemáte importované, nebo nejsou v aktuálním semestru.
+                                    </div>
+                                )}
+                                <p className="text-gray-300">
+                                    Chcete si importovaný rozvrh rovnou uložit, nebo pouze načíst (přepsat ten aktuální)?
+                                </p>
+                                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-2">
+                                    <button onClick={() => setPendingImportModal(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold">
+                                        Zrušit
+                                    </button>
+                                    <button onClick={() => {
+                                        applyVariantDirectly(pendingImportModal.keys);
+                                    }} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg font-bold">
+                                        Pouze načíst
+                                    </button>
+                                    <button onClick={() => {
+                                        applyVariantDirectly(pendingImportModal.keys);
+                                        const newName = `Importovaná varianta ${savedVariants.length + 1}`;
+                                        const newVariant = { name: newName, hash: pendingImportModal.hash };
+                                        setSavedVariants(prev => {
+                                            if (prev.some(v => v.hash === newVariant.hash)) return prev;
+                                            return [...prev, newVariant];
+                                        });
+                                        setEditingVariantId(pendingImportModal.hash);
+                                        setIsVariantsModalOpen(true);
+                                    }} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold">
+                                        Uložit a zobrazit
                                     </button>
                                 </div>
                             </div>
