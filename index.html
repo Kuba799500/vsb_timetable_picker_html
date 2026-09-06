@@ -432,6 +432,7 @@
                                 activityId: item.dto.concreteActivityId,
                                 roomId: item.dto.roomFullCodesString,
                                 capacity: item.dto.concreteActivityCapacity,
+                                teacherLogin: item.dto.teacherLoginsString,
                             });
                         }
                     });
@@ -956,6 +957,7 @@
                         teacher: subject.teacherFull,
                         room: subject.roomId,
                         week: subject.week,
+                        teacherLogin: subject.teacherLogin,
                         isTouch: true
                     });
                 }
@@ -1351,6 +1353,7 @@
                                                                         teacher: subject.teacherFull,
                                                                         room: subject.roomId,
                                                                         week: subject.week,
+                                                                        teacherLogin: subject.teacherLogin,
                                                                         isTouch: false
                                                                     });
                                                                 }}
@@ -1426,7 +1429,13 @@
                                     </>
                                 )}
                                 <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
-                                <div className="text-sm font-medium">{tooltip.teacher}</div>
+                                <div className="text-sm font-medium">
+                                    {tooltip.teacherLogin ? (
+                                        <a href={`https://profily.vsb.cz/${tooltip.teacherLogin.split(',')[0].trim()}`} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
+                                            {tooltip.teacher} <i className="fas fa-external-link-alt text-[10px] ml-1 opacity-70"></i>
+                                        </a>
+                                    ) : tooltip.teacher}
+                                </div>
 
                                 <div className="font-bold text-xs text-gray-400 mt-3 mb-1 uppercase tracking-wider">Místnost</div>
                                 <div className="text-sm font-medium">
