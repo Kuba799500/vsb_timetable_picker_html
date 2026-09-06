@@ -433,6 +433,8 @@
                                 roomId: item.dto.roomFullCodesString,
                                 capacity: item.dto.concreteActivityCapacity,
                                 teacherLogin: item.dto.teacherLoginsString,
+                                subjectId: item.dto.subjectId,
+                                hour: item.dto.concreteActivityOrder,
                             });
                         }
                     });
@@ -626,6 +628,45 @@
                 };
             }, [isLocked]);
         };
+
+        // --- Base62 URL Sharing Logic ---
+        const CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        function toBase62(num) {
+            if (num === 0) return "0";
+            let res = "";
+            while (num > 0) {
+                res = CHARS[num % 62] + res;
+                num = Math.floor(num / 62);
+            }
+            return res;
+        }
+
+        function fromBase62(str) {
+            return str.split("").reduce((acc, char) => acc * 62 + CHARS.indexOf(char), 0);
+        }
+
+        function encodeScheduleBase62(items) {
+            if (!items || items.length === 0) return "";
+            return items.map(item => {
+                const typeInt = item.type === "P" ? 1 : (item.type === "L" ? 2 : 0);
+                const combined = (item.subjectId * 3 + typeInt) * 100 + item.hour;
+                return toBase62(combined);
+            }).join("-");
+        }
+
+        function decodeScheduleBase62(urlParam) {
+            if (!urlParam) return [];
+            return urlParam.split("-").map(hash => {
+                const combined = fromBase62(hash);
+                const hour = combined % 100;
+                const rest = Math.floor(combined / 100);
+                const typeInt = rest % 3;
+                const type = typeInt === 1 ? "P" : (typeInt === 2 ? "L" : "C");
+                const id = Math.floor(rest / 3);
+                return { id, type, hour };
+            });
+        }
 
         const App = () => {
             const [timetableData, setTimetableData] = useLocalStorage("vsb_timetable_data", DEMO_DATA, (parsed) => {
@@ -1058,6 +1099,117 @@
                 entryByKey.set(k, e);
             });
 
+            // --- Variants Logic ---
+            const [savedVariants, setSavedVariants] = useLocalStorage("vsb-timetable-saved-variants", [], (parsed) => {
+                return Array.isArray(parsed) ? parsed : [];
+            });
+            const [isVariantsModalOpen, setIsVariantsModalOpen] = useState(false);
+            const [editingVariantId, setEditingVariantId] = useState(null);
+            
+            // Hash current selected entries
+            const selectedItemsForHash = Array.from(selectedEntries).map(k => entryByKey.get(k)).filter(Boolean);
+            const currentHash = encodeScheduleBase62(selectedItemsForHash);
+            const isCurrentSaved = currentHash === "" || savedVariants.some(v => v.hash === currentHash);
+
+            const hasProcessedUrl = useRef(false);
+            const [urlVariantToProcess, setUrlVariantToProcess] = useState(null);
+            const [pendingVariant, setPendingVariant] = useState(null);
+
+            useEffect(() => {
+                if (hasProcessedUrl.current || allEntries.length === 0) return;
+                const params = new URLSearchParams(window.location.search);
+                const variantParam = params.get('v');
+                if (variantParam) {
+                    hasProcessedUrl.current = true;
+                    window.history.replaceState(null, '', window.location.pathname);
+                    
+                    const decoded = decodeScheduleBase62(variantParam);
+                    if (decoded.length > 0) {
+                        let missingCount = 0;
+                        const matchingKeys = [];
+                        decoded.forEach(d => {
+                            const match = allEntries.find(e => e.subjectId === d.id && e.type === d.type && e.hour === d.hour);
+                            if (match) {
+                                const key = `${match.day}~${match.startTime}~${match.abbreviation}~${match.type}~${match.teacher}~${match.week}`;
+                                matchingKeys.push(key);
+                            } else {
+                                missingCount++;
+                            }
+                        });
+                        
+                        setUrlVariantToProcess({ keys: matchingKeys, missing: missingCount, hash: variantParam });
+                    }
+                }
+            }, [allEntries]);
+
+            // Auto-trigger confirmation when URL variant is loaded
+            useEffect(() => {
+                if (urlVariantToProcess) {
+                    if (!isCurrentSaved && selectedEntries.size > 0) {
+                        setPendingVariant({ keys: urlVariantToProcess.keys, isUrl: true, missing: urlVariantToProcess.missing });
+                    } else {
+                        applyVariantDirectly(urlVariantToProcess.keys, true, urlVariantToProcess.missing);
+                    }
+                    setUrlVariantToProcess(null); // Processed
+                }
+            }, [urlVariantToProcess, isCurrentSaved, selectedEntries.size]);
+
+            const applyVariantDirectly = (keysToApply, isUrl = false, missing = 0) => {
+                const newSet = new Set(keysToApply);
+                setSelectedEntries(newSet);
+                setPendingVariant(null);
+                
+                if (isUrl) {
+                    // Odvybrat předměty které nejsou v URL variantě, pokud chceme "odvybrat co nebylo nasdílené".
+                    // Uživatel říká: "Předměty, které má uživatel importované, ale nebyly nasdílené odkazem se odvyberou, pokud některé hodiny byly vybrány."
+                    // To znamená, že selectedSubjects se musí nastavit pouze na ty předměty, které jsou ve variantě, nebo se ponechat všechny?
+                    // "Odvyberou" implies setting selectedSubjects.
+                    setSelectedSubjects(prev => {
+                        const s = new Set(); // Reset to empty => meaning all subjects visible IF it's empty!
+                        // Wait, if selectedSubjects is empty, ALL subjects are shown.
+                        // To deselect unshared, we must explicitly select only the shared ones.
+                        keysToApply.forEach(k => {
+                            const entry = entryByKey.get(k);
+                            if (entry) s.add(entry.abbreviation);
+                        });
+                        // If s is empty, and we return empty, ALL are shown. We want to show NO subjects if none shared?
+                        // Actually if we just set it to `s`, it will show exactly what was shared.
+                        return s;
+                    });
+                    
+                    if (missing > 0) {
+                        setNotification({ message: `Nenalezeno předmětů: ${missing}`, type: "error" });
+                    }
+                }
+            };
+
+            const handleApplySavedVariant = (hash) => {
+                if (hash === currentHash) return;
+                const decoded = decodeScheduleBase62(hash);
+                const matchingKeys = [];
+                decoded.forEach(d => {
+                    const match = allEntries.find(e => e.subjectId === d.id && e.type === d.type && e.hour === d.hour);
+                    if (match) {
+                        matchingKeys.push(`${match.day}~${match.startTime}~${match.abbreviation}~${match.type}~${match.teacher}~${match.week}`);
+                    }
+                });
+
+                if (!isCurrentSaved && selectedEntries.size > 0) {
+                    setPendingVariant({ keys: matchingKeys, isUrl: false, missing: 0 });
+                } else {
+                    applyVariantDirectly(matchingKeys);
+                }
+            };
+
+            const handleSaveCurrentVariant = () => {
+                if (currentHash === "") return;
+                if (savedVariants.some(v => v.hash === currentHash)) return;
+                const newName = `Varianta ${savedVariants.length + 1}`;
+                const newVariant = { name: newName, hash: currentHash };
+                setSavedVariants([...savedVariants, newVariant]);
+                setEditingVariantId(currentHash);
+            };
+
             const isEntryHidden = (entry) => {
                 const entryKey = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.type}~${entry.teacher}~${entry.week}`;
                 for (const selectedEntryKey of selectedEntries) {
@@ -1219,6 +1371,91 @@
                         </div>
                     </Modal>
 
+                    {/* Varianty Modal */}
+                    <Modal isOpen={isVariantsModalOpen} onClose={() => { setIsVariantsModalOpen(false); setEditingVariantId(null); }} title="Varianty rozvrhu">
+                        <div className="flex flex-col gap-4">
+                            <button onClick={handleSaveCurrentVariant} className={`w-full font-bold py-3 px-4 rounded-full border-2 shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105 ${currentHash === "" || savedVariants.some(v => v.hash === currentHash) ? 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed opacity-50' : 'bg-emerald-700 hover:bg-emerald-600 border-emerald-600 text-emerald-100'}`} disabled={currentHash === "" || savedVariants.some(v => v.hash === currentHash)}>
+                                <i className="fas fa-plus"></i> Uložit aktuální variantu
+                            </button>
+
+                            <div className="flex flex-col gap-2 mt-2">
+                                {savedVariants.length === 0 && <p className="text-gray-400 text-center text-sm">Žádné uložené varianty.</p>}
+                                {savedVariants.map(variant => {
+                                    const isEditing = editingVariantId === variant.hash;
+                                    const isActive = variant.hash === currentHash;
+                                    return (
+                                        <div key={variant.hash} className={`flex items-center justify-between p-3 rounded-lg border-2 ${isActive ? 'bg-blue-900/40 border-blue-600' : 'bg-gray-800/80 border-gray-700 hover:border-gray-600'} transition-all`}>
+                                            <div className="flex-1 mr-2 cursor-pointer" onClick={() => { if (!isEditing) handleApplySavedVariant(variant.hash); }}>
+                                                {isEditing ? (
+                                                    <input 
+                                                        type="text" 
+                                                        autoFocus
+                                                        defaultValue={variant.name} 
+                                                        onBlur={(e) => {
+                                                            const newName = e.target.value.trim() || `Varianta`;
+                                                            setSavedVariants(savedVariants.map(v => v.hash === variant.hash ? { ...v, name: newName } : v));
+                                                            setEditingVariantId(null);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') e.target.blur();
+                                                        }}
+                                                        className="w-full bg-gray-900 text-white px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none" 
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                ) : (
+                                                    <span className={`font-bold ${isActive ? 'text-blue-100' : 'text-gray-200'}`}>{variant.name}</span>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 items-center flex-shrink-0">
+                                                <button onClick={(e) => { e.stopPropagation(); setEditingVariantId(variant.hash); }} className="p-2 text-gray-400 hover:text-white transition-colors" title="Přejmenovat">
+                                                    <i className="fas fa-pencil-alt"></i>
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?v=' + variant.hash); setNotification({message: 'Odkaz zkopírován do schránky', type: 'success'}); }} className="p-2 text-blue-400 hover:text-blue-300 transition-colors" title="Sdílet">
+                                                    <i className="fas fa-share-alt"></i>
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); if (window.confirm('Opravdu chcete smazat tuto variantu?')) setSavedVariants(savedVariants.filter(v => v.hash !== variant.hash)); }} className="p-2 text-red-400 hover:text-red-300 transition-colors" title="Smazat">
+                                                    <i className="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </Modal>
+
+                    {/* Unsaved Changes Confirmation Modal */}
+                    {pendingVariant && (
+                        <Modal isOpen={true} onClose={() => setPendingVariant(null)} title="Neuložené změny">
+                            <div className="flex flex-col gap-4">
+                                {pendingVariant.missing > 0 && (
+                                    <div className="bg-red-900/30 border border-red-500 p-3 rounded text-red-200 text-sm">
+                                        <b>Upozornění:</b> Ve variantě chybí data k {pendingVariant.missing} předmětům. Buď je nemáte importované, nebo nejsou v aktuálním semestru.
+                                    </div>
+                                )}
+                                <p className="text-gray-300">
+                                    Aktuální rozvrh není uložen. Přejete si jej před přepsáním uložit jako novou variantu?
+                                </p>
+                                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-2">
+                                    <button onClick={() => setPendingVariant(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold">
+                                        Zrušit
+                                    </button>
+                                    <button onClick={() => {
+                                        applyVariantDirectly(pendingVariant.keys, pendingVariant.isUrl, pendingVariant.missing);
+                                    }} className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded-lg font-bold">
+                                        Přepsat bez uložení
+                                    </button>
+                                    <button onClick={() => {
+                                        handleSaveCurrentVariant();
+                                        applyVariantDirectly(pendingVariant.keys, pendingVariant.isUrl, pendingVariant.missing);
+                                    }} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold">
+                                        Uložit a pokračovat
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
+
                     <div className="mb-8 mt-2 px-5 w-full flex flex-col gap-3 items-center">
                         <h1 className="text-2xl font-bold text-white w-full text-center">VŠB Timetable Picker (HTML)</h1>
                         <div className="flex flex-wrap gap-4 items-center w-full justify-center">
@@ -1229,6 +1466,9 @@
                             </label>
                             <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-700 hover:bg-blue-600 text-blue-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-blue-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
                                 <i className="fas fa-cog flex-[0 0 auto]"></i><span className="flex-1 text-center px-1">Správa rozvrhu</span>
+                            </button>
+                            <button onClick={() => setIsVariantsModalOpen(true)} className="bg-emerald-700 hover:bg-emerald-600 text-emerald-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-emerald-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
+                                <i className="fas fa-list flex-[0 0 auto]"></i><span className="flex-1 text-center px-1">Varianty</span>
                             </button>
                         </div>
                     </div>
