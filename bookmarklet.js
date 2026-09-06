@@ -38,10 +38,8 @@
             w = window.open("", "vsb_timetable_picker_win");
         }
         if (w) {
-            try {
-                if (w.location.href === "about:blank") w.location.href = u;
-                w.postMessage({ type: "VSB_DOWNLOAD_STARTED", count: o.length }, "*");
-            } catch (e) {}
+            try { if (w.location.href === "about:blank") w.location.href = u; } catch (e) {}
+            try { w.postMessage({ type: "VSB_DOWNLOAD_STARTED", count: o.length }, "*"); } catch (e) {}
         }
     }
 
