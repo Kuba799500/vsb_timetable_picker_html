@@ -348,7 +348,8 @@
             );
         };
 
-        const bookmarkletCode = `javascript:(function(){var t='https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu';if(!location.href.startsWith(t)){window.location.href=t;}else{window._vsbWin=window.open('https://kuba799500.github.io/vsb_timetable_picker_html','vsb_timetable_picker_win');var s=document.createElement('script');s.src='https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v='.concat(Date.now());document.body.appendChild(s);}})();`;
+        const rawBookmarklet = `(function(){var t="https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu";if(!location.href.startsWith(t)){window.location.href=t;}else{window._vsbWin=window.open("https://kuba799500.github.io/vsb_timetable_picker_html","vsb_timetable_picker_win");var s=document.createElement("script");s.src="https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v="+Date.now();document.body.appendChild(s);}})();`;
+        const bookmarkletCode = "javascript:" + encodeURIComponent(rawBookmarklet);
 
         const timeSlots = [
             "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
