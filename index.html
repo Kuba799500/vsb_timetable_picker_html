@@ -348,7 +348,7 @@
             );
         };
 
-        const bookmarkletCode = "javascript:(function(){var t='https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu';if(!location.href.startsWith(t)){window.open(t,'_blank')||(window.location.href=t);}else{window._vsbWin=(window.opener&&!window.opener.closed)?window.opener:window.open('https://kuba799500.github.io/vsb_timetable_picker_html','_blank');var s=document.createElement('script');s.src='https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v='.concat(Date.now());document.body.appendChild(s);}})();";
+        const bookmarkletCode = "javascript:(function(){var t='https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu';if(!location.href.startsWith(t)){var n=location.hostname==='kuba799500.github.io'?'edison_from_picker':'_blank';window.open(t,n)||(window.location.href=t);}else{window._vsbWin=(window.name==='edison_from_picker'&&window.opener&&!window.opener.closed)?window.opener:window.open('https://kuba799500.github.io/vsb_timetable_picker_html','_blank');var s=document.createElement('script');s.src='https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v='.concat(Date.now());document.body.appendChild(s);}})();";
 
         const timeSlots = [
             "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
