@@ -1214,7 +1214,12 @@
                             const startB = getTimeSlotIndex(selectedEntry.startTime.substring(0, 5));
                             const endB = startB + selectedEntry.duration;
 
-                            if (startA < endB && endA > startB) return true;
+                            if (startA < endB && endA > startB) {
+                                if ((entry.week === 'S' && selectedEntry.week === 'L') || (entry.week === 'L' && selectedEntry.week === 'S')) {
+                                    continue;
+                                }
+                                return true;
+                            }
                         }
                     }
                 }
