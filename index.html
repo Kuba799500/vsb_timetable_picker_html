@@ -906,13 +906,16 @@
                 }
             };
 
-            // Helper: Sloučí nová data s existujícími (nahradí DEMO, jinak přidá nové)
+            // Helper: Sloučí nová data s existujícími (nahradí DEMO, jinak přepíše stávající)
             const mergeTimetableData = (newData) => {
                 setTimetableData(prev => {
                     const isDEMO = prev.length === DEMO_DATA.length && prev.every((item, idx) => item.title === DEMO_DATA[idx].title);
                     if (isDEMO) return newData;
-                    const existingTitles = new Set(prev.map(p => p.title));
-                    return [...prev, ...newData.filter(d => !existingTitles.has(d.title))];
+                    
+                    const newDataTitles = new Set(newData.map(p => p.title));
+                    const remainingPrev = prev.filter(p => !newDataTitles.has(p.title));
+                    
+                    return [...remainingPrev, ...newData];
                 });
             };
 
