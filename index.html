@@ -290,6 +290,9 @@
             }
         ];
 
+        let globalModalLockCount = 0;
+        let globalModalOriginalStyles = null;
+
         const Modal = ({ isOpen, onClose, children, title }) => {
             const shouldRender = useMountTransition(isOpen, 100);
             useBodyScrollLock(shouldRender);
@@ -596,35 +599,44 @@
             useLayoutEffect(() => {
                 if (!isLocked) return;
 
-                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-                const scrollY = window.scrollY;
-                const originalStyles = {
-                    position: document.body.style.position,
-                    top: document.body.style.top,
-                    width: document.body.style.width,
-                    overflow: document.body.style.overflow,
-                    paddingRight: document.body.style.paddingRight,
-                    boxSizing: document.body.style.boxSizing
-                };
+                if (globalModalLockCount === 0) {
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    const scrollY = window.scrollY;
+                    globalModalOriginalStyles = {
+                        position: document.body.style.position,
+                        top: document.body.style.top,
+                        width: document.body.style.width,
+                        overflow: document.body.style.overflow,
+                        paddingRight: document.body.style.paddingRight,
+                        boxSizing: document.body.style.boxSizing,
+                        scrollY: scrollY
+                    };
 
-                document.body.style.position = 'fixed';
-                document.body.style.top = `-${scrollY}px`;
-                document.body.style.width = '100vw'; // Use 100vw to cover viewport
-                document.body.style.overflow = 'hidden';
-                document.body.style.boxSizing = 'border-box'; // Ensure padding is inside
-                // Only add padding if there was a scrollbar
-                if (scrollbarWidth > 0) {
-                    document.body.style.paddingRight = `${scrollbarWidth}px`;
+                    document.body.style.position = 'fixed';
+                    document.body.style.top = `-${scrollY}px`;
+                    document.body.style.width = '100vw'; // Use 100vw to cover viewport
+                    document.body.style.overflow = 'hidden';
+                    document.body.style.boxSizing = 'border-box'; // Ensure padding is inside
+                    // Only add padding if there was a scrollbar
+                    if (scrollbarWidth > 0) {
+                        document.body.style.paddingRight = `${scrollbarWidth}px`;
+                    }
                 }
 
+                globalModalLockCount++;
+
                 return () => {
-                    document.body.style.position = originalStyles.position;
-                    document.body.style.top = originalStyles.top;
-                    document.body.style.width = originalStyles.width;
-                    document.body.style.overflow = originalStyles.overflow;
-                    document.body.style.paddingRight = originalStyles.paddingRight;
-                    document.body.style.boxSizing = originalStyles.boxSizing;
-                    window.scrollTo(0, scrollY);
+                    globalModalLockCount--;
+                    if (globalModalLockCount === 0 && globalModalOriginalStyles) {
+                        document.body.style.position = globalModalOriginalStyles.position;
+                        document.body.style.top = globalModalOriginalStyles.top;
+                        document.body.style.width = globalModalOriginalStyles.width;
+                        document.body.style.overflow = globalModalOriginalStyles.overflow;
+                        document.body.style.paddingRight = globalModalOriginalStyles.paddingRight;
+                        document.body.style.boxSizing = globalModalOriginalStyles.boxSizing;
+                        window.scrollTo(0, globalModalOriginalStyles.scrollY);
+                        globalModalOriginalStyles = null;
+                    }
                 };
             }, [isLocked]);
         };
@@ -911,10 +923,10 @@
                 setTimetableData(prev => {
                     const isDEMO = prev.length === DEMO_DATA.length && prev.every((item, idx) => item.title === DEMO_DATA[idx].title);
                     if (isDEMO) return newData;
-                    
+
                     const newDataTitles = new Set(newData.map(p => p.title));
                     const remainingPrev = prev.filter(p => !newDataTitles.has(p.title));
-                    
+
                     return [...remainingPrev, ...newData];
                 });
             };
@@ -1537,11 +1549,11 @@
                                 <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                 <span className="ml-3 font-bold text-nowrap">Zobrazit skryté hodiny</span>
                             </label>
-                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-700 hover:bg-blue-600 text-blue-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-blue-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
-                                <i className="fas fa-cog flex-[0 0 auto]"></i><span className="flex-1 text-center px-1">Správa rozvrhu</span>
-                            </button>
                             <button onClick={() => setIsVariantsModalOpen(true)} className="bg-emerald-700 hover:bg-emerald-600 text-emerald-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-emerald-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
                                 <i className="fas fa-list flex-[0 0 auto]"></i><span className="flex-1 text-center px-1">Varianty</span>
+                            </button>
+                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-700 hover:bg-blue-600 text-blue-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-blue-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
+                                <i className="fas fa-cog flex-[0 0 auto]"></i><span className="flex-1 text-center px-1">Správa rozvrhu</span>
                             </button>
                         </div>
                     </div>

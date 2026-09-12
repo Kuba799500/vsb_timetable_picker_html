@@ -109,11 +109,17 @@
             n.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:999999;font-family:system-ui,-apple-system,sans-serif;";
             n.innerHTML = `
                 <div style="background:#1f2937;color:white;padding:32px;border-radius:24px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);text-align:center;min-width:320px;" onclick="event.stopPropagation()">
-                    <h2 style="margin:0 0 20px 0;font-size:24px;font-weight:700;">Stahování dokončeno</h2>
-                    <button id="vsb_timetable_open_btn" style="background-color:#2563eb;color:#ffffff;font-weight:700;padding:12px 32px;border-radius:9999px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);border:none;cursor:pointer;width:100%;font-size:16px;transition:background-color 0.2s;" onmouseover="this.style.backgroundColor='#1d4ed8'" onmouseout="this.style.backgroundColor='#2563eb'">Pokračovat</button>
+                    <h2 style="color:white;margin:0 0 20px 0;font-size:24px;font-weight:700;">Stahování dokončeno</h2>
+                    <div id="vsb_timetable_open_btn" style="-webkit-appearance: none; appearance: none; background-color: #047857; color: #d1FAE4; font-weight: 700; padding: 12px 32px; border-radius: 9999px; border: 2px solid #049669; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); width: 75%; margin: 0 auto; font-size: 16px; box-sizing: border-box;">Pokračovat</div>
                 </div>
             `;
-            n.onclick = () => { n.remove(); if (window.SIRI_COMPLETION) window.SIRI_COMPLETION(); };
+            n.onclick = () => { n.remove(); };
+            
+            // Ukončíme Siri Shortcut hned, aby nevypršel timeout (UI na stránce zůstane)
+            if (window.SIRI_COMPLETION) {
+                window.SIRI_COMPLETION();
+                window.SIRI_COMPLETION = null;
+            }
             
             document.getElementById("vsb_timetable_open_btn").onclick = async () => {
                 let newW = window.open(u, "vsb_timetable_picker_win");
@@ -121,7 +127,7 @@
                     return doFallback();
                 }
                 const popupInner = n.querySelector('div');
-                popupInner.innerHTML = '<h2 style="margin:0;font-size:20px;font-weight:700;">Přenáším data...</h2>';
+                popupInner.innerHTML = '<h2 style="color:white;margin:0;font-size:20px;font-weight:700;">Přenáším data...</h2>';
                 let ack = false;
                 const onAck = (e) => {
                     if (e.data && e.data.type === "VSB_READY") ack = true;
@@ -135,12 +141,10 @@
                 if (ack) {
                     n.remove();
                     newW.focus();
-                    if (window.SIRI_COMPLETION) window.SIRI_COMPLETION();
                 } else {
-                    popupInner.innerHTML = '<p style="margin:0;font-size:16px;">Chyba komunikace.</p>';
+                    popupInner.innerHTML = '<p style="color:red;margin:0;font-size:16px;">Chyba komunikace.</p>';
                     setTimeout(() => {
                         n.remove();
-                        if (window.SIRI_COMPLETION) window.SIRI_COMPLETION();
                     }, 2000);
                 }
             };
