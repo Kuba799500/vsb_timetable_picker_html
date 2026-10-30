@@ -105,9 +105,9 @@ const useHaptics = () => {
                             {
                                 title: "Středa",
                                 queues: [
-                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "08:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Přednáška ⓘ", teacherFullNamesString: "Přednášková hodina je označena písmenem \"P\" vpravo nahoře a má červenou barvu.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 303, roomFullCodesString: "" } }] },
-                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "11:30", teacherShortNamesString: "Cvičení ⓘ", teacherFullNamesString: "Hodina cvičení je označena písmenem \"C\" vpravo nahoře a má modrou barvu. Vpravo dole vidíte 'L' jako lichý týden.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", educationWeekTitle: "Lichý", concreteActivityId: 304, roomFullCodesString: "" } }] },
-                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "10:45", scheduleWindowEndTime: "13:15", teacherShortNamesString: "Laboratoře ⓘ", teacherFullNamesString: "Laboratorní cvičení je označeno písmenem \"L\" vpravo nahoře a má fialovou barvu. Vpravo dole vidíte 'S' jako sudý týden.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "L", educationWeekTitle: "Sudý", concreteActivityId: 3045, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "08:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Přednáška ⓘ", teacherFullNamesString: "Přednášková hodina je označena červenou barvou.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 303, roomFullCodesString: "POREC1" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "11:30", teacherShortNamesString: "Cvičení ⓘ", teacherFullNamesString: "Hodina cvičení je označena modrou barvou. Vpravo dole vidíte 'L' jako lichý týden.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", educationWeekTitle: "Lichý", concreteActivityId: 304, roomFullCodesString: "POREB313" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "10:45", scheduleWindowEndTime: "13:15", teacherShortNamesString: "Laboratoře ⓘ", teacherFullNamesString: "Laboratorní cvičení je označeno fialovou barvou. Vpravo dole vidíte 'S' jako sudý týden.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "L", educationWeekTitle: "Sudý", concreteActivityId: 3045, roomFullCodesString: "POREB205" } }] },
                                     { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "14:15", teacherShortNamesString: "Povinnosti ⓘ", teacherFullNamesString: "U předmětu v horní nabídce se zobrazí zda si máte zvolit přednášku a/nebo cvičení. Při zvolení se ikona probarví. (Standartně 1 přednáška a/nebo cvičení. Jinak bych musel kód dost upravit 💀)", subjectAbbrev: "DEMO1", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 305, roomFullCodesString: "" } }] },
                                     { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "15:45", teacherShortNamesString: "Správa rozvrhu ⓘ", teacherFullNamesString: "Kliknutím na tlačítko pod nadpisem stránky se dostanete do menu, kde můžete nahrávat své předměty (je zde i odkaz na nápovědu). Vaše soubory automaticky přepíšou DEMO, takže nemusíte nic mazat. Pokud nahrajete předmět, který se zde již nachází, tak se použijí data z nově nahraného.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", concreteActivityId: 306 } }] }
                                 ]
@@ -115,7 +115,7 @@ const useHaptics = () => {
                             {
                                 title: "Pátek",
                                 queues: [
-                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "15:00", teacherShortNamesString: "Kapacita ⓘ", teacherFullNamesString: "Mezi zkratkou předmětu a typem hodiny (P/C) se zobrazí kapacita učebny dané hodiny. Tyto data se často mění, zkontrolujte v Edisonu. Pokud bude kapacita 0, nebo bude ještě před volbou rozvrhu hodina zaplněna, nemůžete se již přihlásit!", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", concreteActivityId: 302, concreteActivityCapacity: 123 } }] }
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "15:00", teacherShortNamesString: "Kapacita ⓘ", teacherFullNamesString: "Mezi zkratkou předmětu a číslem učebny se zobrazí kapacita učebny dané hodiny. Tyto data se často mění, zkontrolujte v Edisonu. Pokud bude kapacita 0, nebo bude ještě před volbou rozvrhu hodina zaplněna, nemůžete se již přihlásit!", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", concreteActivityId: 302, concreteActivityCapacity: 123, roomFullCodesString: "POREB313" } }] }
                                 ]
                             }
                         ]
@@ -620,25 +620,30 @@ const useHaptics = () => {
             }, [tooltip]);
 
             useEffect(() => {
-                if (tooltip && tooltip.room && !tooltip.roomUrl) {
+                if (tooltip && tooltip.room) {
+                    const rooms = tooltip.room.split(", ");
                     const controller = new AbortController();
-                    const fetchRoom = async () => {
+
+                    rooms.forEach(async (r) => {
+                        if (tooltip.roomUrls && tooltip.roomUrls[r]) return;
                         try {
                             // Použijeme CORS proxy, protože API mapy.vsb.cz neumožňuje přímé volání z prohlížeče (CORS error)
-                            const targetUrl = `https://mapy.vsb.cz/maps/api/v0/rooms/autocomplete?query=${encodeURIComponent(tooltip.room)}&language=cs`;
+                            const targetUrl = `https://mapy.vsb.cz/maps/api/v0/rooms/autocomplete?query=${encodeURIComponent(r)}&language=cs`;
                             const res = await fetch(`https://cors-proxy.jjzeleny.workers.dev?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
                             if (res.ok) {
                                 const data = await res.json();
                                 if (Array.isArray(data) && data.length > 0) {
                                     const id = data[0].id;
                                     const url = `https://mapy.vsb.cz/maps/?id=${id}&type=rooms&lang=cs`;
-                                    console.log(`Fetched room URL for ${tooltip.room}: ${url}`);
-                                    setTooltip(prev => (prev && prev.room === tooltip.room ? { ...prev, roomUrl: url } : prev));
+                                    setTooltip(prev => (prev && prev.room === tooltip.room ? {
+                                        ...prev,
+                                        roomUrls: { ...(prev.roomUrls || {}), [r]: url }
+                                    } : prev));
                                 }
                             }
                         } catch (e) { }
-                    };
-                    fetchRoom();
+                    });
+
                     return () => controller.abort();
                 }
             }, [tooltip]);
@@ -1476,6 +1481,9 @@ const useHaptics = () => {
                                                         const colStart = getTimeSlotIndex(subject.startTime.substring(0, 5));
                                                         // Unique React key: use activityId if available to prevent duplicate key issues
                                                         const reactKey = subject.activityId ? `${subject.abbreviation}-${subject.activityId}` : `${key}-${index}`;
+                                                        const displayRoom = subject.roomId
+                                                            ? subject.roomId.split(",").map(r => r.trim()).filter(Boolean).map(r => r.startsWith("POR") ? r.slice(3) : r).join(",")
+                                                            : "";
 
                                                         return (
                                                             <div
@@ -1525,12 +1533,12 @@ const useHaptics = () => {
                                                             >
                                                                 <div className="pl-0.5 py-0.5 pr-2 flex flex-col h-full">
 
-                                                                    <div className="flex justify-between items-start">
-                                                                        <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
+                                                                    <div className="flex justify-between items-start" style={{ columnGap: "4px" }}>
+                                                                        <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white shrink-0 ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
                                                                             {subject.abbreviation}
                                                                         </span>
-                                                                        <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>
-                                                                        <span className="font-mono opacity-70">{subject.type}</span>
+                                                                        <span className="text-[10px] font-mono opacity-70 shrink-0" title="Kapacita">{subject.capacity}</span>
+                                                                        <span className="text-[10px] font-mono opacity-70 truncate text-left min-w-0">{displayRoom}</span>
                                                                     </div>
                                                                     <div className="flex-1 flex items-center justify-between w-full pl-1">
                                                                         <span className="flex-1 font-semibold truncate text-center" title={subject.teacher}>{subject.teacher}</span>
@@ -1591,18 +1599,23 @@ const useHaptics = () => {
                                 <div className="text-sm font-medium">
                                     {tooltip.teacherLogin ? (
                                         <a href={`https://profily.vsb.cz/${tooltip.teacherLogin.split(',')[0].trim()}`} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
-                                            {tooltip.teacher} <Icon name="external-link-alt" className="text-[10px] ml-1 opacity-70" />
+                                            {tooltip.teacher}<Icon name="external-link-alt" className="text-[10px] ml-1 opacity-70" />
                                         </a>
                                     ) : tooltip.teacher}
                                 </div>
 
                                 <div className="font-bold text-xs text-gray-400 mt-3 mb-1 uppercase tracking-wider">Místnost</div>
                                 <div className="text-sm font-medium">
-                                    {tooltip.roomUrl ? (
-                                        <a href={tooltip.roomUrl} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
-                                            {tooltip.room} <Icon name="external-link-alt" className="text-[10px] ml-1 opacity-70" />
-                                        </a>
-                                    ) : tooltip.room}
+                                    {tooltip.room.split(", ").map((r, i, arr) => (
+                                        <React.Fragment key={r + i}>
+                                            {i > 0 && ", "}
+                                            {tooltip.roomUrls && tooltip.roomUrls[r] ? (
+                                                <a href={tooltip.roomUrls[r]} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
+                                                    {r}{i === arr.length - 1 && <><Icon name="external-link-alt" className="text-[10px] ml-1 opacity-70" /></>}
+                                                </a>
+                                            ) : r}
+                                        </React.Fragment>
+                                    ))}
                                 </div>
 
 
