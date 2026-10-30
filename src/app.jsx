@@ -1,0 +1,1628 @@
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
+import * as htmlToImage from "html-to-image";
+import { WebHaptics } from "web-haptics";
+import { Icon } from "./icons.jsx";
+
+window.name = "vsb_timetable_picker_win";
+window.htmlToImage = htmlToImage;
+
+// --- HAPTICS ---
+const hapticsInstance = new WebHaptics();
+const useHaptics = () => {
+    return {
+        trigger: (preset, opts) => {
+            try { hapticsInstance.trigger(preset, opts); } catch (e) { /* silně ignorovat */ }
+        }
+    };
+};
+
+// --- DEMO DATA ---
+        const DEMO_DATA = [
+            {
+                title: "info",
+                data: {
+                    subjectScheduleTable: {
+                        days: [
+                            {
+                                title: "Pondělí",
+                                queues: [
+                                    { items: [{ used: true, duration: 4, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:30", teacherShortNamesString: "Klikněte sem pravým tlačítkem...", teacherFullNamesString: "Výborně! Zde se vám zobrazí celá jména vyučujících. Prozkoumejte další políčka s ikonou ⓘ a seznamte se s Timetablem :)", subjectAbbrev: "INFO", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 101, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 4, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:30", teacherShortNamesString: "...nebo podržte prstem", teacherFullNamesString: "Výborně! Zde se vám zobrazí celá jména vyučujících. Prozkoumejte další políčka s ikonou ⓘ a seznamte se s Timetablem :)", subjectAbbrev: "INFO", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 102, roomFullCodesString: "" } }] }
+                                ]
+                            },
+                            {
+                                title: "Úterý",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:00", scheduleWindowEndTime: "18:30", teacherShortNamesString: "Export rozvrhu ⓘ", teacherFullNamesString: "Pokud chcete sdílet váš rozvrh s kamarády nebo si uložit jednu z variant, využijte tuto možnost v menu \"Správa rozvrhu\".", subjectAbbrev: "INFO", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 302 } }] }
+                                ]
+                            },
+                            {
+                                title: "Čtvrtek",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Červená čára ⓘ", teacherFullNamesString: "To je jenom ukazatel aktuálního času xdd", subjectAbbrev: "INFO", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 103, roomFullCodesString: "" } }] }
+                                ]
+                            },
+                            {
+                                title: "Pátek",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "07:15", scheduleWindowEndTime: "09:45", teacherShortNamesString: "Místnosti ⓘ", teacherFullNamesString: "Kliknutím na odkaz níže zobrazíte mapu s lokací místnosti:", subjectAbbrev: "INFO", concreteActivityTemplate: "C", concreteActivityId: 104, roomFullCodesString: "PORUA1" } }] }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                title: "kolize",
+                data: {
+                    subjectScheduleTable: {
+                        days: [
+                            {
+                                title: "Úterý",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zvolení hodiny ⓘ", teacherFullNamesString: "Kliknutím levým tlačítkem nebo ťuknutím zvolíte hodinu předmětu. Zároveň se skryjí ostatní hodiny tohoto předmětu a hodiny které začínají ve stejný čas. (Jak je zobrazit se dozvíte v políčku níže)", subjectAbbrev: "KOLIZE", concreteActivityTemplate: "C", concreteActivityId: 201, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "11:30", scheduleWindowEndTime: "12:15", teacherShortNamesString: "Zobraz. skrytých ⓘ", teacherFullNamesString: "Pro odkrytí klikněte na přepínač pod nadpisem stránky. Zobrazí se vám všechny hodiny, které kolidují se zvolenou hodinou, nebo ostatní hodiny z vybraného předmětu.", subjectAbbrev: "KOLIZE", concreteActivityTemplate: "C", concreteActivityId: 202, roomFullCodesString: "" } }] }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                title: "Smazat",
+                data: {
+                    subjectScheduleTable: {
+                        days: [
+                            {
+                                title: "Pondělí",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Reset ⓘ", teacherFullNamesString: "Pokud byste chtěli znovu zobrazit DEMO nebo smazat všechny nahrané předměty, můžete využít tlačítko \"Smazat vše a resetovat\" v menu Správa rozvrhu.", subjectAbbrev: "SMAZAT", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 302, roomFullCodesString: "" } }] }
+                                ]
+                            },
+                            {
+                                title: "Pátek",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "19:15", teacherShortNamesString: "Smazat předmět ⓘ", teacherFullNamesString: "Při najetí na předmět v nabídce nahoře se vám ukáže křížek. Tím můžete předmět smazat (nebojte, můžete ho pak znovu nahrát)", subjectAbbrev: "SMAZAT", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 301, roomFullCodesString: "" } }] }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                title: "demo1",
+                data: {
+                    subjectScheduleTable: {
+                        days: [
+                            {
+                                title: "Úterý",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "16:45", scheduleWindowEndTime: "17:30", teacherShortNamesString: "Zobraz. předmětů ⓘ", teacherFullNamesString: "Při kliknutí na předmět v horní nabídce zobrazíte všechny jeho hodiny. Zvolené hodiny z jiných předmětů se vám zde také objeví.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", concreteActivityId: 302, roomFullCodesString: "" } }] }
+                                ]
+                            },
+                            {
+                                title: "Středa",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "08:00", scheduleWindowEndTime: "10:30", teacherShortNamesString: "Přednáška ⓘ", teacherFullNamesString: "Přednášková hodina je označena písmenem \"P\" vpravo nahoře a má červenou barvu.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 303, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "09:00", scheduleWindowEndTime: "11:30", teacherShortNamesString: "Cvičení ⓘ", teacherFullNamesString: "Hodina cvičení je označena písmenem \"C\" vpravo nahoře a má modrou barvu. Vpravo dole vidíte 'L' jako lichý týden.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", educationWeekTitle: "Lichý", concreteActivityId: 304, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "10:45", scheduleWindowEndTime: "13:15", teacherShortNamesString: "Laboratoře ⓘ", teacherFullNamesString: "Laboratorní cvičení je označeno písmenem \"L\" vpravo nahoře a má fialovou barvu. Vpravo dole vidíte 'S' jako sudý týden.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "L", educationWeekTitle: "Sudý", concreteActivityId: 3045, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "14:15", teacherShortNamesString: "Povinnosti ⓘ", teacherFullNamesString: "U předmětu v horní nabídce se zobrazí zda si máte zvolit přednášku a/nebo cvičení. Při zvolení se ikona probarví. (Standartně 1 přednáška a/nebo cvičení. Jinak bych musel kód dost upravit 💀)", subjectAbbrev: "DEMO1", concreteActivityTemplate: "P", lecture: true, concreteActivityId: 305, roomFullCodesString: "" } }] },
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "14:15", scheduleWindowEndTime: "15:45", teacherShortNamesString: "Správa rozvrhu ⓘ", teacherFullNamesString: "Kliknutím na tlačítko pod nadpisem stránky se dostanete do menu, kde můžete nahrávat své předměty (je zde i odkaz na nápovědu). Vaše soubory automaticky přepíšou DEMO, takže nemusíte nic mazat. Pokud nahrajete předmět, který se zde již nachází, tak se použijí data z nově nahraného.", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", concreteActivityId: 306 } }] }
+                                ]
+                            },
+                            {
+                                title: "Pátek",
+                                queues: [
+                                    { items: [{ used: true, duration: 3, dto: { scheduleWindowBeginTime: "12:30", scheduleWindowEndTime: "15:00", teacherShortNamesString: "Kapacita ⓘ", teacherFullNamesString: "Mezi zkratkou předmětu a typem hodiny (P/C) se zobrazí kapacita učebny dané hodiny. Tyto data se často mění, zkontrolujte v Edisonu. Pokud bude kapacita 0, nebo bude ještě před volbou rozvrhu hodina zaplněna, nemůžete se již přihlásit!", subjectAbbrev: "DEMO1", concreteActivityTemplate: "C", concreteActivityId: 302, concreteActivityCapacity: 123 } }] }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ];
+
+        let globalModalLockCount = 0;
+        let globalModalOriginalStyles = null;
+
+        const Modal = ({ isOpen, onClose, children, title }) => {
+            const shouldRender = useMountTransition(isOpen, 100);
+            useBodyScrollLock(shouldRender);
+
+            if (!shouldRender) return null;
+
+            const overlayStyle = { animation: isOpen ? 'fadeIn 0.2s ease-out forwards' : 'fadeOut 0.1s ease-out forwards' };
+            const modalStyle = { animation: isOpen ? 'modalIn 0.2s ease-out forwards' : 'modalOut 0.1s ease-in forwards' };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay p-4" onClick={onClose} style={overlayStyle}>
+                    <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()} style={modalStyle}>
+                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
+                            <Icon name="times" className="text-xl" />
+                        </button>
+                        <h2 className="text-2xl font-bold mb-3 text-white">{title}</h2>
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+
+
+        const Notification = ({ message, type, onClose }) => {
+            const [isClosing, setIsClosing] = useState(false);
+
+            const closeWithAnimation = () => {
+                setIsClosing(true);
+                setTimeout(onClose, 200);
+            };
+
+            useEffect(() => {
+                if (type === 'success' || type === 'error') {
+                    const timer = setTimeout(closeWithAnimation, 5000);
+                    return () => clearTimeout(timer);
+                }
+            }, [type, onClose]);
+
+            const overlayStyle = { animation: isClosing ? 'fadeOut 0.2s ease-out forwards' : 'fadeIn 0.2s ease-out forwards' };
+            const modalStyle = { animation: isClosing ? 'modalOut 0.2s ease-in forwards' : 'modalIn 0.2s ease-out forwards' };
+
+            return ReactDOM.createPortal(
+                <div className="fixed inset-0 z-[110] flex items-center justify-center pointer-events-none">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" style={overlayStyle}></div>
+                    <div className="bg-gray-800 border border-gray-600 shadow-2xl rounded-lg p-6 flex flex-col items-center gap-4 pointer-events-auto relative min-w-[250px]" style={modalStyle}>
+                        {type === 'loading' && <Icon name="circle-notch" className="text-4xl text-blue-500" />}
+                        {type === 'success' && <Icon name="check-circle" className="text-4xl text-green-500" />}
+                        {type === 'error' && <Icon name="exclamation-circle" className="text-4xl text-red-500" />}
+                        <div className="text-white font-medium text-lg text-center whitespace-pre-line">{message}</div>
+                        {type !== 'loading' && (
+                            <button onClick={closeWithAnimation} className="mt-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-full transition-colors font-semibold text-sm">Zavřít</button>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+
+        const bookmarkletCode = "javascript:(function(){var t='https://edison.sso.vsb.cz/wps/myportal/student/rozvrh/volba-rozvrhu';if(!location.href.startsWith(t)){var n=location.hostname==='kuba799500.github.io'?'edison_from_picker':'_blank';window.open(t,n)||(window.location.href=t);}else{window._vsbWin=(window.name==='edison_from_picker'&&window.opener&&!window.opener.closed)?window.opener:window.open('https://kuba799500.github.io/vsb_timetable_picker_html','_blank');var s=document.createElement('script');s.src='https://kuba799500.github.io/vsb_timetable_picker_html/bookmarklet.js?v='.concat(Date.now());document.body.appendChild(s);}})();";
+
+        const timeSlots = [
+            "07:15-08:00", "08:00-08:45", "09:00-09:45", "09:45-10:30", "10:45-11:30",
+            "11:30-12:15", "12:30-13:15", "13:15-14:00", "14:15-15:00", "15:00-15:45",
+            "16:00-16:45", "16:45-17:30", "17:45-18:30", "18:30-19:15",
+        ];
+
+        const colors = ["bg-green-700", "bg-fuchsia-500", "bg-orange-500", "bg-yellow-500", "bg-purple-700", "bg-pink-900", "bg-indigo-500", "bg-violet-900"];
+
+        const SLOT_MIN = 50;
+        const SLOT_MAX = 75;
+
+        const calculateSlotWidth = (viewportWidth) => {
+            const NUM_SLOTS = timeSlots.length + 1
+            const idealSlotWidth = (viewportWidth - 8) / NUM_SLOTS;
+            return Math.max(SLOT_MIN, Math.min(SLOT_MAX, idealSlotWidth));
+        };
+
+        const calculateCurrentTimePosition = (slotWidth) => {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const TIME_SLOT_WIDTH = slotWidth;
+
+            for (let i = 0; i < timeSlots.length; i++) {
+                const [start, end] = timeSlots[i].split("-").map((t) => {
+                    const [h, m] = t.split(":").map(Number);
+                    return h * 60 + m;
+                });
+
+                if (currentMinutes < start) {
+                    if (i === 0) {
+                        return 1;
+                    }
+                    return i * TIME_SLOT_WIDTH;
+                }
+
+                if (currentMinutes >= start && currentMinutes < end) {
+                    const slotProgress = (currentMinutes - start) / (end - start);
+                    const position = i * TIME_SLOT_WIDTH + slotProgress * TIME_SLOT_WIDTH;
+                    return position === 0 ? 1 : position;
+                }
+
+            }
+
+            return timeSlots.length * TIME_SLOT_WIDTH;
+        };
+
+        const calculateEndTime = (startTime, duration) => {
+            startTime = startTime.substring(0, 5);
+            const startIndex = timeSlots.findIndex(slot => slot.startsWith(startTime));
+
+            if (startIndex === -1) return "??:??";
+            const endIndex = startIndex + duration - 1;
+
+            if (endIndex < timeSlots.length) {
+                return timeSlots[endIndex].split("-")[1];
+            }
+
+            return "??:??";
+        };
+
+        const formatSchedule = (scheduleTable) => {
+            const formatted = [];
+            if (!scheduleTable || !scheduleTable.days) return [];
+            scheduleTable.days.forEach((day) => {
+                day.queues.forEach((queue) => {
+                    queue.items.forEach((item) => {
+                        if (item.used && item.dto) {
+                            const duration = item.duration || 2;
+                            formatted.push({
+                                day: day.title,
+                                startTime: item.dto.scheduleWindowBeginTime,
+                                endTime: calculateEndTime(item.dto.scheduleWindowBeginTime, duration),
+                                teacher: item.dto.teacherShortNamesString,
+                                teacherFull: item.dto.teacherFullNamesString,
+                                abbreviation: item.dto.subjectAbbrev,
+                                type: item.dto.lecture ? 'P' : (item.dto.concreteActivityTemplate === 'L' ? 'L' : 'C'),
+                                week: item.dto.educationWeekTitle === 'Sudý' ? 'S' : (item.dto.educationWeekTitle === 'Lichý' ? 'L' : 'ALL'),
+                                duration: duration,
+                                activityId: item.dto.concreteActivityId,
+                                roomId: item.dto.roomFullCodesString,
+                                capacity: item.dto.concreteActivityCapacity,
+                                teacherLogin: item.dto.teacherLoginsString,
+                                subjectId: item.dto.subjectId,
+                                hour: item.dto.concreteActivityOrder,
+                            });
+                        }
+                    });
+                });
+            });
+            return formatted;
+        };
+
+        // Tetris Layout Logic
+        const calculateLayout = (entries) => {
+            const sorted = [...entries].sort((a, b) => {
+                if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime);
+                return b.duration - a.duration;
+            });
+
+            const rows = [];
+
+            const positioned = sorted.map(entry => {
+                let rowIndex = -1;
+                for (let r = 0; r < rows.length; r++) {
+                    if (entry.startTime >= rows[r]) {
+                        rowIndex = r;
+                        rows[r] = entry.endTime;
+                        break;
+                    }
+                }
+                if (rowIndex === -1) {
+                    rowIndex = rows.length;
+                    rows.push(entry.endTime);
+                }
+                return { ...entry, visualRowIndex: rowIndex };
+            });
+
+            return {
+                items: positioned,
+                rowCount: Math.max(1, rows.length)
+            };
+        };
+
+        const getTimeSlotIndex = (time) => {
+            return timeSlots.findIndex(slot => slot.startsWith(time)) + 2;
+        }
+
+        const useLocalStorage = (key, initialValue, customParse = x => x, customFormat = x => x) => {
+            const [storedValue, setStoredValue] = useState(() => {
+                if (typeof window === "undefined") {
+                    return initialValue;
+                }
+                try {
+                    const item = window.localStorage.getItem(key);
+                    return item ? customParse(JSON.parse(item)) : initialValue;
+                } catch (error) {
+                    console.error(error);
+                    return initialValue;
+                }
+            });
+
+            const setValue = (value) => {
+                try {
+                    const valueToStore = value instanceof Function ? value(storedValue) : value;
+                    setStoredValue(valueToStore);
+                    if (typeof window !== "undefined") {
+                        window.localStorage.setItem(key, JSON.stringify(customFormat(valueToStore)));
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            return [storedValue, setValue];
+        };
+
+        const useLongPress = ({ onLongPress, delay = 500 }) => {
+            const timerRef = useRef(null);
+            const isLongPress = useRef(false);
+            const startPos = useRef({ x: 0, y: 0 });
+
+            const handleTouchStart = (e, context) => {
+                isLongPress.current = false;
+                const touch = e.touches[0];
+                const x = touch.clientX;
+                const y = touch.clientY;
+                startPos.current = { x, y };
+
+                timerRef.current = setTimeout(() => {
+                    isLongPress.current = true;
+                    if (onLongPress) onLongPress(e, context, { x, y });
+                }, delay);
+            };
+
+            const handleTouchMove = (e) => {
+                if (timerRef.current) {
+                    const touch = e.touches[0];
+                    const moveX = Math.abs(touch.clientX - startPos.current.x);
+                    const moveY = Math.abs(touch.clientY - startPos.current.y);
+                    if (moveX > 10 || moveY > 10) {
+                        clearTimeout(timerRef.current);
+                        timerRef.current = null;
+                    }
+                }
+            };
+
+            const handleTouchEnd = (e) => {
+                if (timerRef.current) {
+                    clearTimeout(timerRef.current);
+                    timerRef.current = null;
+                }
+                if (isLongPress.current) {
+                    if (e.cancelable) e.preventDefault();
+                    setTimeout(() => { isLongPress.current = false; }, 200);
+                }
+            };
+
+            return {
+                handlers: {
+                    onTouchStart: handleTouchStart,
+                    onTouchMove: handleTouchMove,
+                    onTouchEnd: handleTouchEnd
+                },
+                isLongPress
+            };
+        };
+
+        // Helper: Najde první subjectAbbrev v JSON datech
+        const findSubjectAbbrev = (json) => {
+            const items = (json.subjectScheduleTable?.days || []).flatMap(d => (d.queues || []).flatMap(q => q.items || []));
+            return items.find(it => it.dto?.subjectAbbrev)?.dto.subjectAbbrev;
+        };
+
+        // Helper: Přečte soubor jako JSON
+        const readFileAsJSON = (file) => new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    resolve({ title: file.name.replace(".json", ""), data: json.default || json });
+                } catch { resolve(null); }
+            };
+            reader.readAsText(file);
+        });
+
+        const useMountTransition = (isMounted, unmountDelay) => {
+            const [hasTransitionedIn, setHasTransitionedIn] = useState(false);
+
+            useEffect(() => {
+                let timeoutId;
+                if (isMounted && !hasTransitionedIn) {
+                    setHasTransitionedIn(true);
+                } else if (!isMounted && hasTransitionedIn) {
+                    timeoutId = setTimeout(() => setHasTransitionedIn(false), unmountDelay);
+                }
+                return () => clearTimeout(timeoutId);
+            }, [unmountDelay, isMounted, hasTransitionedIn]);
+
+            return hasTransitionedIn;
+        };
+
+        const useBodyScrollLock = (isLocked) => {
+            useLayoutEffect(() => {
+                if (!isLocked) return;
+
+                if (globalModalLockCount === 0) {
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    const scrollY = window.scrollY;
+                    globalModalOriginalStyles = {
+                        position: document.body.style.position,
+                        top: document.body.style.top,
+                        width: document.body.style.width,
+                        overflow: document.body.style.overflow,
+                        paddingRight: document.body.style.paddingRight,
+                        boxSizing: document.body.style.boxSizing,
+                        scrollY: scrollY
+                    };
+
+                    document.body.style.position = 'fixed';
+                    document.body.style.top = `-${scrollY}px`;
+                    document.body.style.width = '100vw'; // Use 100vw to cover viewport
+                    document.body.style.overflow = 'hidden';
+                    document.body.style.boxSizing = 'border-box'; // Ensure padding is inside
+                    // Only add padding if there was a scrollbar
+                    if (scrollbarWidth > 0) {
+                        document.body.style.paddingRight = `${scrollbarWidth}px`;
+                    }
+                }
+
+                globalModalLockCount++;
+
+                return () => {
+                    globalModalLockCount--;
+                    if (globalModalLockCount === 0 && globalModalOriginalStyles) {
+                        document.body.style.position = globalModalOriginalStyles.position;
+                        document.body.style.top = globalModalOriginalStyles.top;
+                        document.body.style.width = globalModalOriginalStyles.width;
+                        document.body.style.overflow = globalModalOriginalStyles.overflow;
+                        document.body.style.paddingRight = globalModalOriginalStyles.paddingRight;
+                        document.body.style.boxSizing = globalModalOriginalStyles.boxSizing;
+                        window.scrollTo(0, globalModalOriginalStyles.scrollY);
+                        globalModalOriginalStyles = null;
+                    }
+                };
+            }, [isLocked]);
+        };
+
+        // --- Base62 URL Sharing Logic ---
+        const CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        function toBase62(num) {
+            if (num === 0) return "0";
+            let res = "";
+            while (num > 0) {
+                res = CHARS[num % 62] + res;
+                num = Math.floor(num / 62);
+            }
+            return res;
+        }
+
+        function fromBase62(str) {
+            return str.split("").reduce((acc, char) => acc * 62 + CHARS.indexOf(char), 0);
+        }
+
+        function encodeScheduleBase62(items) {
+            if (!items || items.length === 0) return "";
+            return items.map(item => {
+                const typeInt = item.type === "P" ? 1 : (item.type === "L" ? 2 : 0);
+                const combined = (item.subjectId * 3 + typeInt) * 100 + item.hour;
+                return toBase62(combined);
+            }).join("-");
+        }
+
+        function decodeScheduleBase62(urlParam) {
+            if (!urlParam) return [];
+            return urlParam.split("-").map(hash => {
+                const combined = fromBase62(hash);
+                const hour = combined % 100;
+                const rest = Math.floor(combined / 100);
+                const typeInt = rest % 3;
+                const type = typeInt === 1 ? "P" : (typeInt === 2 ? "L" : "C");
+                const id = Math.floor(rest / 3);
+                return { id, type, hour };
+            });
+        }
+
+        const App = () => {
+            const [timetableData, setTimetableData] = useLocalStorage("vsb_timetable_data", DEMO_DATA, (parsed) => {
+                return parsed && parsed.length > 0 ? parsed : DEMO_DATA;
+            });
+
+            const [selectedEntries, setSelectedEntries] = useLocalStorage("selectedEntries", new Set(),
+                (arr) => new Set(arr),
+                (set) => Array.from(set)
+            );
+
+            const [selectedSubjects, setSelectedSubjects] = useLocalStorage("selectedSubjects", new Set(),
+                (arr) => new Set(arr),
+                (set) => Array.from(set)
+            );
+
+            const [showUnusedClasses, setShowUnusedClasses] = useLocalStorage("showUnusedClasses", false);
+            const haptics = useHaptics();
+
+            const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+            const [tooltip, setTooltip] = useState(null);
+            const [isClosing, setIsClosing] = useState(false);
+            const [notification, setNotification] = useState(null);
+            const [copyStatus, setCopyStatus] = useState(null);
+
+            const [isTouchDevice, setIsTouchDevice] = useState(false);
+            useEffect(() => {
+                setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+            }, []);
+
+            const [exportModalOpen, setExportModalOpen] = useState(false);
+            const [exportedBlob, setExportedBlob] = useState(null);
+            const [exportedFileName, setExportedFileName] = useState("");
+
+
+
+            useEffect(() => {
+                const handleMessage = (event) => {
+                    if (event.origin !== "https://edison.sso.vsb.cz") return;
+
+                    if (event.data && event.data.type === 'VSB_SCHEDULE_DATA') {
+                        const results = event.data.payload;
+                        processImportedData(results);
+                        try { event.source.postMessage({ type: "VSB_READY" }, event.origin); } catch (e) { }
+                    }
+
+                    if (event.data && event.data.type === 'VSB_DOWNLOAD_STARTED') {
+                        setNotification({
+                            message: `Stahování ${event.data.count} předmětů z Edisonu...`,
+                            type: "loading"
+                        });
+                    }
+                };
+                window.addEventListener("message", handleMessage);
+
+                return () => window.removeEventListener("message", handleMessage);
+            }, []);
+
+            const copyToClipboard = () => {
+                navigator.clipboard.writeText(bookmarkletCode).then(() => {
+                    haptics.trigger('success');
+                    setCopyStatus('success');
+                    setTimeout(() => setCopyStatus(null), 3000);
+                }).catch(err => {
+                    haptics.trigger('error');
+                    console.error(err);
+                    setCopyStatus('error');
+                    setTimeout(() => setCopyStatus(null), 3000);
+                });
+            };
+
+            const closeTooltip = (e) => {
+                if (e) e.stopPropagation();
+                setIsClosing(true);
+                setTimeout(() => {
+                    setTooltip(null);
+                    setIsClosing(false);
+                }, 100);
+            };
+
+            // Reset stavu zavírání při otevření nového tooltipu
+            useEffect(() => {
+                if (tooltip) setIsClosing(false);
+            }, [tooltip]);
+
+
+
+            useLayoutEffect(() => {
+                if (tooltip) {
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    document.body.style.paddingRight = `${scrollbarWidth}px`;
+                    document.body.style.overflow = 'hidden';
+                    document.documentElement.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    document.documentElement.style.overflow = '';
+                }
+                return () => {
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    document.documentElement.style.overflow = '';
+                };
+            }, [tooltip]);
+
+            useEffect(() => {
+                if (tooltip && tooltip.room && !tooltip.roomUrl) {
+                    const controller = new AbortController();
+                    const fetchRoom = async () => {
+                        try {
+                            // Použijeme CORS proxy, protože API mapy.vsb.cz neumožňuje přímé volání z prohlížeče (CORS error)
+                            const targetUrl = `https://mapy.vsb.cz/maps/api/v0/rooms/autocomplete?query=${encodeURIComponent(tooltip.room)}&language=cs`;
+                            const res = await fetch(`https://cors-proxy.jjzeleny.workers.dev?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (Array.isArray(data) && data.length > 0) {
+                                    const id = data[0].id;
+                                    const url = `https://mapy.vsb.cz/maps/?id=${id}&type=rooms&lang=cs`;
+                                    console.log(`Fetched room URL for ${tooltip.room}: ${url}`);
+                                    setTooltip(prev => (prev && prev.room === tooltip.room ? { ...prev, roomUrl: url } : prev));
+                                }
+                            }
+                        } catch (e) { }
+                    };
+                    fetchRoom();
+                    return () => controller.abort();
+                }
+            }, [tooltip]);
+
+
+            const subjectColors = useRef({}).current;
+
+
+
+
+            const [slotWidth, setSlotWidth] = useState(() => {
+                const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
+                return calculateSlotWidth(w);
+            });
+
+            useEffect(() => {
+                const onResize = () => {
+                    setSlotWidth(calculateSlotWidth(window.innerWidth));
+                };
+                window.addEventListener('resize', onResize);
+                return () => window.removeEventListener('resize', onResize);
+            }, []);
+
+
+
+            const [currentTimePosition, setCurrentTimePosition] = useState(calculateCurrentTimePosition(slotWidth));
+
+            // Update position immediately when slot width changes (responsive resize)
+            useEffect(() => {
+                setCurrentTimePosition(calculateCurrentTimePosition(slotWidth));
+            }, [slotWidth]);
+
+            // Update position every 60 seconds for time passage
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setCurrentTimePosition(calculateCurrentTimePosition(slotWidth));
+                }, 60000);
+                return () => clearInterval(interval);
+            }, []);
+
+            // localStorage sync for selectedEntries and selectedSubjects is handled by useLocalStorage hook
+
+            const getFileName = () => {
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                return `rozvrh_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}.png`;
+            };
+
+            const handleExportJpg = () => {
+                const element = document.getElementById('timetable-content');
+                if (!element) return;
+                setNotification({ message: "Generování obrázku...", type: "loading" });
+                setTimeout(() => {
+                    window.htmlToImage.toBlob(element, {
+                        quality: 0.95,
+                        pixelRatio: 3,
+                        backgroundColor: '#242424',
+                        type: 'image/jpeg',
+                        filter: (node) => !node.classList || !node.classList.contains('no-export')
+                    }).then(blob => {
+                        haptics.trigger('success');
+                        const fileName = getFileName();
+                        setExportedBlob(blob);
+                        setExportedFileName(fileName);
+                        setExportModalOpen(true);
+                        setNotification(null);
+                        setTimeout(() => shareImage(blob, fileName), 200);
+                    }).catch(err => {
+                        haptics.trigger('error');
+                        console.error(err);
+                        setNotification({ message: "Chyba při exportu.", type: "error" });
+                    });
+                }, 100);
+            };
+
+            const downloadImage = () => {
+                if (!exportedBlob) return;
+                const link = document.createElement('a');
+                link.download = exportedFileName || 'rozvrh.png';
+                link.href = URL.createObjectURL(exportedBlob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                haptics.trigger('success');
+                setNotification({ message: "Obrázek stažen.", type: "success" });
+                setExportModalOpen(false);
+            };
+
+            const shareImage = async (directBlob = null, directName = null) => {
+                const blobToShare = (directBlob instanceof Blob) ? directBlob : exportedBlob;
+                const nameToShare = (typeof directName === 'string' ? directName : exportedFileName) || 'rozvrh.png';
+                if (!blobToShare) return;
+                const file = new File([blobToShare], nameToShare, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Můj rozvrh',
+                            text: 'Podívej se na můj rozvrh!'
+                        });
+                        setExportModalOpen(false);
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.error(err);
+                            haptics.trigger('error');
+                            setNotification({ message: "Chyba při sdílení.", type: "error" });
+                        }
+                    }
+                } else {
+                    haptics.trigger('error');
+                    setNotification({ message: "Vaše zařízení nepodporuje sdílení.", type: "error" });
+                }
+            };
+
+            // Helper: Sloučí nová data s existujícími (nahradí DEMO, jinak přepíše stávající)
+            const mergeTimetableData = (newData) => {
+                setTimetableData(prev => {
+                    const isDEMO = prev.length === DEMO_DATA.length && prev.every((item, idx) => item.title === DEMO_DATA[idx].title);
+                    if (isDEMO) return newData;
+
+                    const newDataTitles = new Set(newData.map(p => p.title));
+                    const remainingPrev = prev.filter(p => !newDataTitles.has(p.title));
+
+                    return [...remainingPrev, ...newData];
+                });
+            };
+
+            const processImportedData = (results) => {
+                setNotification({ message: "Zpracovávání dat...", type: "loading" });
+
+                const parsedData = Object.entries(results)
+                    .filter(([, json]) => !json.error)
+                    .map(([id, json]) => ({ title: findSubjectAbbrev(json) || id, data: json }));
+
+                if (parsedData.length > 0) {
+                    mergeTimetableData(parsedData);
+                    setIsUploadModalOpen(false);
+                    haptics.trigger('success');
+                    setNotification({ message: `Úspěšně nahráno ${parsedData.length} předmětů.`, type: "success" });
+                } else {
+                    haptics.trigger('error');
+                    setNotification({ message: "Nepodařilo se načíst žádná data.", type: "error" });
+                }
+            };
+
+            // Handlery
+            const handleFileUpload = (event) => {
+                const files = Array.from(event.target.files);
+                if (files.length === 0) return;
+
+                Promise.all(files.map(readFileAsJSON)).then(results => {
+                    const validData = results.filter(Boolean);
+                    if (validData.length > 0) {
+                        mergeTimetableData(validData);
+                        setIsUploadModalOpen(false);
+                    }
+                });
+            };
+
+            // Two-step delete all: perform deletion without browser confirm
+            const performDeleteAll = () => {
+                haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
+                // Pokud jsou aktuální data prázdná, načteme DEMO. Jinak je vymažeme.
+                if (timetableData.length === 0) {
+                    setTimetableData(DEMO_DATA);
+                } else {
+                    setTimetableData([]);
+                }
+                setSelectedEntries(new Set());
+                setSelectedSubjects(new Set());
+                setIsUploadModalOpen(false);
+                setConfirmDeleteAll(false);
+                setShowUnusedClasses(false);
+            };
+
+            const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+
+
+
+            // Two-step delete: perform deletion without browser confirm
+            const performDeleteSubject = (subjectName) => {
+                haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
+                setTimetableData(prev => prev.filter(fileItem => {
+                    const containsSubject = fileItem.title.includes(subjectName) ||
+                        (fileItem.data?.subjectScheduleTable?.days || []).some(d =>
+                            d.queues.some(q => q.items.some(it => it.dto?.subjectAbbrev === subjectName))
+                        );
+                    return !containsSubject;
+                }));
+                setSelectedSubjects(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(subjectName);
+                    return newSet;
+                });
+                // clear any pending confirm state
+                setConfirmDeleteSubject(null);
+            }
+
+            const [confirmDeleteSubject, setConfirmDeleteSubject] = useState(null);
+
+            // --- LONG PRESS LOGIC via Hook ---
+            const { handlers: touchHandlers, isLongPress } = useLongPress({
+                onLongPress: (e, subject, { x, y }) => {
+                    setTooltip({
+                        x,
+                        y,
+                        teacher: subject.teacherFull,
+                        room: subject.roomId,
+                        week: subject.week,
+                        teacherLogin: subject.teacherLogin,
+                        isTouch: true
+                    });
+                }
+            });
+            const tooltipRef = useRef(null);
+
+            // Výpočet pozice tooltipu podle jeho skutečné výšky
+            useLayoutEffect(() => {
+                if (tooltip && tooltipRef.current) {
+                    const updatePosition = () => {
+                        const el = tooltipRef.current;
+                        if (!el) return;
+
+                        const height = el.offsetHeight;
+                        const gap = 15; // Mezera od kurzoru
+
+                        if (tooltip.y + height + gap > window.innerHeight) {
+                            el.style.top = `${window.innerHeight - height - 10}px`;
+                        } else {
+                            el.style.top = `${tooltip.y + gap}px`;
+                        }
+                    };
+
+                    updatePosition();
+                    // iOS fix: Přepočítat ještě jednou v dalším frame, kdyby se výška změnila po vykreslení
+                    const rafId = requestAnimationFrame(updatePosition);
+                    return () => cancelAnimationFrame(rafId);
+                }
+            }, [tooltip]);
+
+
+
+
+
+
+
+            const allEntries = timetableData.map(({ data }) => formatSchedule(data.subjectScheduleTable)).flat();
+
+            let pomI = 0;
+            allEntries.forEach((entry) => {
+                if (!subjectColors[entry.abbreviation]) {
+                    subjectColors[entry.abbreviation] = colors[pomI % colors.length];
+                    pomI++;
+                }
+            });
+
+
+
+            const pickClass = (entry) => {
+                haptics.trigger('selection');
+                setSelectedEntries((prev) => {
+                    const newSet = new Set(prev);
+                    const key = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.type}~${entry.teacher}~${entry.week}`;
+                    if (newSet.has(key)) newSet.delete(key);
+                    else newSet.add(key);
+                    return newSet;
+                });
+            };
+
+            const toggleSubject = (subject) => {
+                haptics.trigger('light');
+                setSelectedSubjects((prev) => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(subject)) newSet.delete(subject);
+                    else newSet.add(subject);
+                    return newSet;
+                });
+            };
+
+            const groupAndFilterEntries = () => {
+                const grouped = { Pondělí: [], Úterý: [], Středa: [], Čtvrtek: [], Pátek: [] };
+
+                allEntries.forEach((entry) => {
+                    const key = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.type}~${entry.teacher}~${entry.week}`;
+                    const isSelected = selectedEntries.has(key);
+                    const isSubjectVisible = selectedSubjects.size === 0 || selectedSubjects.has(entry.abbreviation);
+                    const isCollisionVisible = showUnusedClasses || !isEntryHidden(entry);
+
+                    if (isSubjectVisible && (isCollisionVisible || isSelected)) {
+                        if (grouped[entry.day]) grouped[entry.day].push(entry);
+                    }
+                });
+                return grouped;
+            }
+
+            const uniqueSubjects = [...new Set(allEntries.map((entry) => `${entry.abbreviation}~${entry.type}`))];
+            const subjectTypesMap = uniqueSubjects.reduce((acc, subject) => {
+                const [name, type] = subject.split("~");
+                if (!acc[name]) acc[name] = [];
+                acc[name].push(type);
+                return acc;
+            }, {});
+
+            // Pre-computed lookup map: key -> entry (O(1) instead of O(n) find)
+            const entryByKey = new Map();
+            allEntries.forEach(e => {
+                const k = `${e.day}~${e.startTime}~${e.abbreviation}~${e.type}~${e.teacher}~${e.week}`;
+                entryByKey.set(k, e);
+            });
+
+            // --- Variants Logic ---
+            const [savedVariants, setSavedVariants] = useLocalStorage("vsb-timetable-saved-variants", [], (parsed) => {
+                return Array.isArray(parsed) ? parsed : [];
+            });
+            const [isVariantsModalOpen, setIsVariantsModalOpen] = useState(false);
+            const [editingVariantId, setEditingVariantId] = useState(null);
+            const [confirmDeleteVariantId, setConfirmDeleteVariantId] = useState(null);
+
+            // Hash current selected entries
+            const selectedItemsForHash = Array.from(selectedEntries).map(k => entryByKey.get(k)).filter(Boolean);
+            const currentHash = encodeScheduleBase62(selectedItemsForHash);
+            const isCurrentSaved = currentHash === "" || savedVariants.some(v => v.hash === currentHash);
+
+            const hasProcessedUrl = useRef(false);
+            const [urlVariantToProcess, setUrlVariantToProcess] = useState(null);
+
+            const [pendingUnsavedCurrent, setPendingUnsavedCurrent] = useState(null);
+            const [pendingImportModal, setPendingImportModal] = useState(null);
+            const [resumeAction, setResumeAction] = useState(null);
+
+            useEffect(() => {
+                if (hasProcessedUrl.current || allEntries.length === 0) return;
+                const params = new URLSearchParams(window.location.search);
+                const variantParam = params.get('v');
+                if (variantParam) {
+                    hasProcessedUrl.current = true;
+                    window.history.replaceState(null, '', window.location.pathname);
+
+                    const decoded = decodeScheduleBase62(variantParam);
+                    if (decoded.length > 0) {
+                        let missingCount = 0;
+                        const matchingKeys = [];
+                        decoded.forEach(d => {
+                            const match = allEntries.find(e => e.subjectId === d.id && e.type === d.type && e.hour === d.hour);
+                            if (match) {
+                                const key = `${match.day}~${match.startTime}~${match.abbreviation}~${match.type}~${match.teacher}~${match.week}`;
+                                matchingKeys.push(key);
+                            } else {
+                                missingCount++;
+                            }
+                        });
+
+                        setUrlVariantToProcess({ keys: matchingKeys, missing: missingCount, hash: variantParam });
+                    }
+                }
+            }, [allEntries]);
+
+            // Auto-trigger confirmation when URL variant is loaded
+            useEffect(() => {
+                if (urlVariantToProcess) {
+                    if (!isCurrentSaved && selectedEntries.size > 0) {
+                        setPendingUnsavedCurrent({ keys: urlVariantToProcess.keys, isUrl: true, missing: urlVariantToProcess.missing, hash: urlVariantToProcess.hash });
+                    } else {
+                        if (savedVariants.some(v => v.hash === urlVariantToProcess.hash) || currentHash === urlVariantToProcess.hash) {
+                            applyVariantDirectly(urlVariantToProcess.keys);
+                        } else {
+                            setPendingImportModal(urlVariantToProcess);
+                        }
+                    }
+                    setUrlVariantToProcess(null);
+                }
+            }, [urlVariantToProcess, isCurrentSaved, selectedEntries.size, savedVariants, currentHash]);
+
+            const applyVariantDirectly = (keysToApply) => {
+                const newSet = new Set(keysToApply);
+                setSelectedEntries(newSet);
+                setPendingUnsavedCurrent(null);
+                setPendingImportModal(null);
+            };
+
+            const handleApplySavedVariant = (hash) => {
+                setIsVariantsModalOpen(false);
+                if (hash === currentHash) return;
+                const decoded = decodeScheduleBase62(hash);
+                const matchingKeys = [];
+                decoded.forEach(d => {
+                    const match = allEntries.find(e => e.subjectId === d.id && e.type === d.type && e.hour === d.hour);
+                    if (match) {
+                        matchingKeys.push(`${match.day}~${match.startTime}~${match.abbreviation}~${match.type}~${match.teacher}~${match.week}`);
+                    }
+                });
+
+                if (!isCurrentSaved && selectedEntries.size > 0) {
+                    setPendingUnsavedCurrent({ keys: matchingKeys, isUrl: false, missing: 0 });
+                } else {
+                    applyVariantDirectly(matchingKeys);
+                }
+            };
+
+            const handleSaveCurrentVariant = () => {
+                if (currentHash === "") return;
+                if (savedVariants.some(v => v.hash === currentHash)) return;
+                const newName = `Varianta ${savedVariants.length + 1}`;
+                const newVariant = { name: newName, hash: currentHash };
+                setSavedVariants([...savedVariants, newVariant]);
+                setEditingVariantId(currentHash);
+            };
+
+            const isEntryHidden = (entry) => {
+                const entryKey = `${entry.day}~${entry.startTime}~${entry.abbreviation}~${entry.type}~${entry.teacher}~${entry.week}`;
+                for (const selectedEntryKey of selectedEntries) {
+                    if (selectedEntryKey === entryKey) continue;
+                    const selectedEntry = entryByKey.get(selectedEntryKey);
+                    if (selectedEntry) {
+                        if (entry.abbreviation === selectedEntry.abbreviation && entry.type === selectedEntry.type) return true;
+
+                        if (entry.day === selectedEntry.day) {
+                            const startA = getTimeSlotIndex(entry.startTime.substring(0, 5));
+                            const endA = startA + entry.duration;
+                            const startB = getTimeSlotIndex(selectedEntry.startTime.substring(0, 5));
+                            const endB = startB + selectedEntry.duration;
+
+                            if (startA < endB && endA > startB) {
+                                if ((entry.week === 'S' && selectedEntry.week === 'L') || (entry.week === 'L' && selectedEntry.week === 'S')) {
+                                    continue;
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            };
+
+            const groupedData = groupAndFilterEntries();
+            const DAY_COL_WIDTH = slotWidth - 4;
+            const SLOT_WIDTH = slotWidth;
+            const ROW_HEIGHT = 60;
+            const TABLE_WIDTH = DAY_COL_WIDTH + (timeSlots.length * SLOT_WIDTH);
+            const SCREEN_WIDTH = TABLE_WIDTH + 4;
+
+            const TABLE_MIN_WIDTH = (SLOT_MIN - 4) + (timeSlots.length * SLOT_MIN);
+
+            return (
+                <div className="flex-1 w-full mx-auto pt-4 flex flex-col items-center" style={{ maxWidth: SCREEN_WIDTH }}>
+                    <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Správa rozvrhu">
+                        <div className="flex flex-col gap-6">
+
+                            {/* Sekce pro automatický import */}
+                            <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+
+                                <div className="flex flex-col gap-3 items-center">
+                                    <div className="text-center w-full">
+                                        <div className="flex justify-center gap-2 flex-wrap">
+                                            {!isTouchDevice ? (
+                                                <a href={bookmarkletCode} className="bg-yellow-600 hover:bg-yellow-700 text-yellow-100 font-bold py-2 px-4 rounded-full border-2 border-yellow-600 cursor-grab active:cursor-grabbing shadow-lg transition-all" title="Přetáhni mě na lištu záložek" onClick={e => e.preventDefault()}>
+                                                    ⚡ Rychlý import z Edisonu
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    onClick={copyToClipboard}
+                                                    className={`font-bold py-2 px-4 rounded-full border-2 shadow-lg transition-all duration-300 flex items-center gap-2 ${copyStatus === 'success' ? 'bg-green-600 border-green-600 text-green-50 scale-105' :
+                                                        copyStatus === 'error' ? 'bg-red-600 border-red-600 text-red-50 shake' :
+                                                            'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200'
+                                                        }`}
+                                                >
+                                                    {copyStatus === 'success' ? (
+                                                        <><Icon name="check" /> Zkopírováno!</>
+                                                    ) : copyStatus === 'error' ? (
+                                                        <><Icon name="times" /> Chyba!</>
+                                                    ) : (
+                                                        <><Icon name="copy" /> Zkopírovat skript</>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full text-left bg-gray-800/50 p-3 rounded text-xs text-gray-400">
+                                        {isTouchDevice ? (
+                                            <span>
+                                                <p className="font-bold mb-1 text-gray-300">Rychlý import z Edisonu:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li>Klikněte na <b>Zkopírovat skript</b>.</li>
+                                                    <li>Vytvořte si v prohlížeči novou záložku (složka oblíbené).</li>
+                                                    <li>Jděte do úpravy této záložky a místo URL vložte zkopírovaný kód.</li>
+                                                    <li>Klikněte do adresního řádku, klepněte na záložku.</li>
+                                                    <li>Přihlašte se do Edisonu.</li>
+                                                    <li>Znovu otevřete záložku.</li>
+                                                    <li>Data se automaticky importují.</li>
+                                                    <li>Záložku můžete odstranit.</li>
+
+                                                </ol>
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                <p className="font-bold mb-1 text-gray-300">Rychlý import z Edisonu:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li>Přetáhněte tlačítko na lištu oblíbených záložek.</li>
+                                                    <span className="ml-2 text-gray-500 text-[0.7rem]">→ pokud lištu nevidíte, stiskněte <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Ctrl+Shift+B</code>/<code className="bg-gray-700 px-1 py-0.5 rounded text-gray-400 font-mono text-[0.575rem]">Cmd+Shift+B</code></span>
+                                                    <li>Otevřete záložku.</li>
+                                                    <li>Přihlaste se do Edisonu.</li>
+                                                    <li>Znovu otevřete záložku.</li>
+                                                    <li>Data se automaticky importují.</li>
+                                                    <li>Záložku můžete odstranit.</li>
+                                                </ol>
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-4">
+                                <label className="block text-sm font-bold text-gray-300 text-center">Nahráním souborů přepíšete DEMO.</label>
+                                <input id="fileInput" type="file" multiple accept=".json" onChange={handleFileUpload} className="hidden" />
+                                <label htmlFor="fileInput" className="inline-flex items-center bg-blue-700 hover:bg-blue-600 text-blue-100 font-bold py-2 px-6 rounded-full border-2 border-blue-600 cursor-pointer shadow-lg transition-all hover:scale-105">
+                                    <Icon name="upload" className="mr-2" />Vybrat soubory
+                                </label>
+                                <label className="block text-xs font-medium text-gray-400 text-center max-w-sm">Soubory můžete nahrávat jednotlivě, nebo všechny naráz.<br />Nahrané soubory se uloží do paměti prohlížeče.</label>
+                            </div>
+
+                            <div className="w-full">
+                                <button onClick={handleExportJpg} className="w-full bg-emerald-700 hover:bg-emerald-600 text-emerald-100 font-bold py-2 px-4 rounded-full border-2 border-emerald-600 shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105">
+                                    <Icon name="camera" /> Exportovat rozvrh
+                                </button>
+                            </div>
+
+                            <div className="border-t border-gray-600 pt-6">
+                                <button
+                                    onClick={() => {
+                                        if (confirmDeleteAll) {
+                                            performDeleteAll();
+                                        } else {
+                                            haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
+                                            setConfirmDeleteAll(true);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (confirmDeleteAll) setConfirmDeleteAll(false);
+                                    }}
+                                    className={`w-full font-bold py-2 px-4 rounded-full border-2 shadow-lg flex items-center justify-center gap-2 transition-all duration-150 hover:scale-105 ${confirmDeleteAll ? 'bg-red-800 border-red-600 text-red-100' : 'bg-red-700 hover:bg-red-600 border-red-600 text-red-100'}`}
+                                >
+                                    {confirmDeleteAll ? (
+                                        <><Icon name="trash" />Opravdu chcete vše smazat a resetovat?</>
+                                    ) : (
+                                        <><Icon name="trash" /> Smazat vše a resetovat</>
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col items-center pt-5 border-t border-gray-600">
+                                <a className="text-blue-400 text-lg font-bold hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-300" target="_blank" href="https://github.com/Kuba799500/vsb_timetable_picker_html">
+                                    <Icon name="question-circle" className="mr-2" />Nápověda
+                                </a>
+                                <div className="text-xs text-gray-400 text-center">
+                                    <p>podrobný návod rychlého importu &bull; získání souborů manuálně</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Modal>
+
+                    <Modal isOpen={exportModalOpen} onClose={() => setExportModalOpen(false)} title="Obrázek vygenerován">
+                        <div className="flex gap-4 justify-center p-2">
+                            <button onClick={downloadImage} className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-4 px-4 rounded-xl border-2 border-zinc-500 shadow-lg flex flex-col items-center justify-center gap-2 transition-all hover:scale-105">
+                                <Icon name="download" className="text-3xl mb-1" />
+                                <span>Stáhnout</span>
+                            </button>
+                            <button onClick={shareImage} className="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-xl border-2 border-blue-500 shadow-lg flex flex-col items-center justify-center gap-2 transition-all hover:scale-105">
+                                <Icon name="share-from-square" className="text-3xl mb-1" />
+                                <span>Otevřít v…</span>
+                            </button>
+                        </div>
+                    </Modal>
+
+                    {/* Varianty Modal */}
+                    <Modal isOpen={isVariantsModalOpen} onClose={() => {
+                        setIsVariantsModalOpen(false);
+                        setEditingVariantId(null);
+                        setConfirmDeleteVariantId(null);
+
+                        if (resumeAction) {
+                            if (resumeAction.type === 'SHOW_IMPORT_MODAL') {
+                                if (savedVariants.some(v => v.hash === resumeAction.payload.hash) || currentHash === resumeAction.payload.hash) {
+                                    applyVariantDirectly(resumeAction.payload.keys);
+                                } else {
+                                    setPendingImportModal(resumeAction.payload);
+                                }
+                            } else if (resumeAction.type === 'APPLY_VARIANT') {
+                                applyVariantDirectly(resumeAction.payload.keys);
+                            }
+                            setResumeAction(null);
+                        }
+                    }} title="Varianty rozvrhu">
+                        <div className="flex flex-col gap-4">
+                            <button onClick={handleSaveCurrentVariant} className={`w-full font-bold py-3 px-4 rounded-full border-2 shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105 ${currentHash === "" || savedVariants.some(v => v.hash === currentHash) ? 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed opacity-50' : 'bg-emerald-700 hover:bg-emerald-600 border-emerald-600 text-emerald-100'}`} disabled={currentHash === "" || savedVariants.some(v => v.hash === currentHash)}>
+                                <Icon name="plus" /> Uložit aktuální variantu
+                            </button>
+
+                            <div className="flex flex-col gap-2 mt-2">
+                                {savedVariants.length === 0 && <p className="text-gray-400 text-center text-sm">Žádné uložené varianty.</p>}
+                                {savedVariants.map(variant => {
+                                    const isEditing = editingVariantId === variant.hash;
+                                    const isActive = variant.hash === currentHash;
+                                    return (
+                                        <div key={variant.hash} className={`flex items-center justify-between p-3 rounded-lg border-2 ${isActive ? 'bg-blue-900/40 border-blue-600' : 'bg-gray-800/80 border-gray-700 hover:border-gray-600'} transition-all`}>
+                                            <div className="flex-1 mr-2 cursor-pointer" onClick={() => { if (!isEditing) handleApplySavedVariant(variant.hash); }}>
+                                                {isEditing ? (
+                                                    <input
+                                                        type="text"
+                                                        autoFocus
+                                                        defaultValue={variant.name}
+                                                        onBlur={(e) => {
+                                                            const newName = e.target.value.trim() || `Varianta`;
+                                                            setSavedVariants(savedVariants.map(v => v.hash === variant.hash ? { ...v, name: newName } : v));
+                                                            setEditingVariantId(null);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') e.target.blur();
+                                                        }}
+                                                        className="w-full bg-gray-900 text-white px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                ) : (
+                                                    <span className={`font-bold ${isActive ? 'text-blue-100' : 'text-gray-200'}`}>{variant.name}</span>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 items-center flex-shrink-0">
+                                                <button onClick={(e) => { e.stopPropagation(); setEditingVariantId(variant.hash); }} className="p-2 text-gray-400 hover:text-white transition-colors" title="Přejmenovat">
+                                                    <Icon name="pencil-alt" />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?v=' + variant.hash); setNotification({ message: 'Odkaz zkopírován do schránky', type: 'success' }); }} className="p-2 text-blue-400 hover:text-blue-300 transition-colors" title="Sdílet">
+                                                    <Icon name="share-alt" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (confirmDeleteVariantId === variant.hash) {
+                                                            setSavedVariants(savedVariants.filter(v => v.hash !== variant.hash));
+                                                            setConfirmDeleteVariantId(null);
+                                                        } else {
+                                                            setConfirmDeleteVariantId(variant.hash);
+                                                        }
+                                                    }}
+                                                    onMouseLeave={() => {
+                                                        if (confirmDeleteVariantId === variant.hash) setConfirmDeleteVariantId(null);
+                                                    }}
+                                                    className={`p-2 transition-colors ${confirmDeleteVariantId === variant.hash ? 'bg-red-700 hover:bg-red-600 text-red-100 rounded px-2 text-sm font-bold shadow-lg ml-1' : 'text-red-400 hover:text-red-300'}`}
+                                                    title="Smazat"
+                                                >
+                                                    {confirmDeleteVariantId === variant.hash ? "Smazat?" : <Icon name="times" />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </Modal>
+
+                    {/* Step 1: Unsaved Changes Confirmation Modal */}
+                    {pendingUnsavedCurrent && (
+                        <Modal isOpen={true} onClose={() => setPendingUnsavedCurrent(null)} title="Neuložené změny">
+                            <div className="flex flex-col gap-4">
+                                <p className="text-gray-300">
+                                    Aktuální rozvrh není uložen. Přejete si jej před načtením uložit jako novou variantu?
+                                </p>
+                                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-2">
+                                    <button onClick={() => setPendingUnsavedCurrent(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold">
+                                        Zrušit
+                                    </button>
+                                    <button onClick={() => {
+                                        const { keys, isUrl, missing, hash } = pendingUnsavedCurrent;
+                                        setPendingUnsavedCurrent(null);
+                                        if (isUrl) {
+                                            setPendingImportModal({ keys, missing, hash });
+                                        } else {
+                                            applyVariantDirectly(keys);
+                                        }
+                                    }} className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded-lg font-bold">
+                                        Přepsat bez uložení
+                                    </button>
+                                    <button onClick={() => {
+                                        const { keys, isUrl, missing, hash } = pendingUnsavedCurrent;
+                                        handleSaveCurrentVariant();
+                                        setPendingUnsavedCurrent(null);
+                                        setResumeAction({
+                                            type: isUrl ? 'SHOW_IMPORT_MODAL' : 'APPLY_VARIANT',
+                                            payload: isUrl ? { keys, missing, hash } : { keys }
+                                        });
+                                        setIsVariantsModalOpen(true);
+                                    }} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold">
+                                        Uložit a pokračovat
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
+
+                    {/* Step 2: Imported Variant Modal */}
+                    {pendingImportModal && (
+                        <Modal isOpen={true} onClose={() => setPendingImportModal(null)} title="Importovaná varianta">
+                            <div className="flex flex-col gap-4">
+                                {pendingImportModal.missing > 0 && (
+                                    <div className="bg-red-900/30 border border-red-500 p-3 rounded text-red-200 text-sm">
+                                        <b>Upozornění:</b> Ve variantě chybí data k {pendingImportModal.missing} předmětům. Buď je nemáte importované, nebo nejsou v aktuálním semestru.
+                                    </div>
+                                )}
+                                <p className="text-gray-300">
+                                    Chcete si importovaný rozvrh rovnou uložit, nebo pouze načíst (přepsat ten aktuální)?
+                                </p>
+                                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-2">
+                                    <button onClick={() => setPendingImportModal(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold">
+                                        Zrušit
+                                    </button>
+                                    <button onClick={() => {
+                                        applyVariantDirectly(pendingImportModal.keys);
+                                    }} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg font-bold">
+                                        Pouze načíst
+                                    </button>
+                                    <button onClick={() => {
+                                        applyVariantDirectly(pendingImportModal.keys);
+                                        const newName = `Importovaná varianta ${savedVariants.length + 1}`;
+                                        const newVariant = { name: newName, hash: pendingImportModal.hash };
+                                        setSavedVariants(prev => {
+                                            if (prev.some(v => v.hash === newVariant.hash)) return prev;
+                                            return [...prev, newVariant];
+                                        });
+                                        setEditingVariantId(pendingImportModal.hash);
+                                        setIsVariantsModalOpen(true);
+                                    }} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold">
+                                        Uložit a zobrazit
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
+
+                    <div className="mb-8 mt-2 px-5 w-full flex flex-col gap-3 items-center">
+                        <h1 className="text-2xl font-bold text-white w-full text-center">VŠB Timetable Picker (HTML)</h1>
+                        <div className="flex flex-wrap gap-4 items-center w-full justify-center">
+                            <label className="inline-flex items-center cursor-pointer bg-gray-800 [@media(hover:hover)]:hover:bg-gray-700 active:bg-gray-700 text-gray-200 border-2 border-gray-700 px-4 py-2 rounded-full transition-all shadow-lg flex-shrink-0 select-none [@media(hover:hover)]:hover:scale-105 active:scale-105">
+                                <input type="checkbox" onChange={() => { haptics.trigger('light'); setShowUnusedClasses(v => !v); }} checked={showUnusedClasses} className="sr-only peer" />
+                                <div className="relative w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                                <span className="ml-3 font-bold text-nowrap">Zobrazit skryté hodiny</span>
+                            </label>
+                            <button onClick={() => setIsVariantsModalOpen(true)} className="bg-emerald-700 hover:bg-emerald-600 text-emerald-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-emerald-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
+                                <Icon name="list" className="flex-[0 0 auto]" /><span className="flex-1 text-center px-1">Varianty</span>
+                            </button>
+                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-blue-700 hover:bg-blue-600 text-blue-100 text-nowrap font-bold py-2 px-4 rounded-full border-2 border-blue-600 shadow-lg flex items-center gap-2 flex-shrink-0 transition-all hover:scale-105">
+                                <Icon name="cog" className="flex-[0 0 auto]" /><span className="flex-1 text-center px-1">Správa rozvrhu</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mb-6 px-5 flex flex-wrap gap-3 w-full justify-center">
+                        {Object.entries(subjectTypesMap).map(([name, types]) => (
+                            <div key={name} className="relative group">
+                                <button onClick={() => toggleSubject(name)} className={`px-4 py-3 border rounded-lg transition-all duration-200 shadow-lg ${selectedSubjects.has(name) ? "bg-gray-700 border-gray-500" : "bg-zinc-800 border-zinc-600 opacity-60 [@media(hover:hover)]:hover:opacity-100"}`}>
+                                    <div className={`font-bold ${subjectColors[name]} text-white rounded mb-2 py-1 px-3 text-lg shadow-sm`}>{name}</div>
+                                    <div className="flex justify-center gap-2 w-full">
+                                        {types.map((type, i) => {
+                                            const isSelected = Array.from(selectedEntries).some((el) => {
+                                                const split = el.split("~");
+                                                return split[2] === name && split[3] === type;
+                                            });
+                                            return <div key={name + type + i} className={`inline-block px-2 py-0.5 text-xs rounded font-bold border ${type === "C" ? (isSelected ? "bg-blue-600 border-blue-400 text-white" : "text-blue-400 border-blue-900") : type === "L" ? (isSelected ? "bg-fuchsia-600 border-fuchsia-400 text-white" : "text-fuchsia-400 border-fuchsia-900") : (isSelected ? "bg-red-600 border-red-400 text-white" : "text-red-400 border-red-900")}`}>{type}</div>
+                                        })}
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirmDeleteSubject === name) {
+                                            performDeleteSubject(name);
+                                        } else {
+                                            haptics.trigger([{ duration: 40, intensity: 0.9 }, { delay: 30, duration: 40, intensity: 0.6 }]);
+                                            setConfirmDeleteSubject(name);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        // collapse confirmation when mouse leaves the button
+                                        if (confirmDeleteSubject === name) setConfirmDeleteSubject(null);
+                                    }}
+                                    className={`absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center shadow-md text-xs transition-all duration-150 ${confirmDeleteSubject === name ? 'px-3 py-1 rounded-full w-auto opacity-100' : `w-6 h-6 ${selectedSubjects.has(name) ? 'opacity-100' : 'opacity-0 [@media(hover:hover)]:group-hover:opacity-100'}`}`}>
+                                    {confirmDeleteSubject === name ? 'Smazat?' : <Icon name="times" />}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+
+
+                    <div className="w-full overflow-x-auto">
+                        <div className="inline-flex">
+                            <div className="flex flex-col">
+                                <div id="timetable-content" className="bg-[#242424] inline-block">
+                                    <div className="flex bg-gray-800 border-b-2 border-gray-600" style={{ width: TABLE_WIDTH }}>
+                                        <div className="flex-none bg-gray-700 flex items-center justify-center font-bold text-gray-400 border-r border-gray-600" style={{ width: DAY_COL_WIDTH }}>Den</div>
+                                        {timeSlots.map((slot, index) => (
+                                            <div key={slot} className={`flex-none h-full py-2 text-center text-xs text-gray-400 border-r border-gray-700/50 flex flex-col justify-center ${index % 2 ? "bg-gray-700/30" : "bg-gray-800"}`} style={{ width: SLOT_WIDTH }}>
+                                                {slot.split("-").map((part, i) => <div key={i}>{part}</div>)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="relative flex flex-col gap-1 select-none" style={{ minWidth: TABLE_WIDTH }}>
+                                        {currentTimePosition && (
+                                            <div className="absolute w-0.5 bg-red-500 z-20 pointer-events-none shadow-[0_0_8px_rgba(239,68,68,0.8)] no-export" style={{ left: `${currentTimePosition + DAY_COL_WIDTH}px`, height: 'calc(100% + 3.5rem)' }} />
+                                        )}
+
+                                        {["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek"].map((day) => {
+                                            const rawEntries = groupedData[day] || [];
+                                            const { items: positionedEntries, rowCount } = calculateLayout(rawEntries);
+
+                                            return (
+                                                <div key={day} className="relative bg-gray-800 border-b border-gray-700 grid"
+                                                    style={{
+                                                        width: TABLE_WIDTH,
+                                                        gridTemplateColumns: `${DAY_COL_WIDTH}px repeat(${timeSlots.length}, ${SLOT_WIDTH}px)`,
+                                                        gridTemplateRows: `repeat(${rowCount}, ${ROW_HEIGHT}px)`
+                                                    }}>
+
+                                                    <div className="col-start-1 flex items-center justify-center bg-sky-900 text-sky-200 font-bold text-lg border-r border-gray-600 z-10"
+                                                        style={{ gridRow: `1 / span ${rowCount}` }}>
+                                                        {day.substring(0, 2)}
+                                                    </div>
+
+                                                    <div className="absolute inset-0 pointer-events-none z-0">
+                                                        {timeSlots.map((_, i) => (
+                                                            <div key={i} className="absolute top-0 bottom-0 border-r border-gray-700/40" style={{ left: DAY_COL_WIDTH + ((i + 1) * SLOT_WIDTH) }}></div>
+                                                        ))}
+                                                    </div>
+
+                                                    {positionedEntries.map((subject, index) => {
+                                                        const key = `${subject.day}~${subject.startTime}~${subject.abbreviation}~${subject.type}~${subject.teacher}~${subject.week}`;
+                                                        const isSelected = selectedEntries.has(key);
+                                                        const colStart = getTimeSlotIndex(subject.startTime.substring(0, 5));
+                                                        // Unique React key: use activityId if available to prevent duplicate key issues
+                                                        const reactKey = subject.activityId ? `${subject.abbreviation}-${subject.activityId}` : `${key}-${index}`;
+
+                                                        return (
+                                                            <div
+                                                                key={reactKey}
+                                                                className={`
+                                                    relative z-10 m-[2px] border-2 rounded-md cursor-pointer overflow-hidden text-xs
+                                                    transition-all duration-150 hover:z-20 hover:shadow-xl hover:scale-105
+                                                    ${showUnusedClasses && "select-none"} 
+                                                    ${subject.type === "P" ? "border-red-800 bg-red-900/80 hover:bg-red-800" : subject.type === "L" ? "border-fuchsia-800 bg-fuchsia-900/80 hover:bg-fuchsia-800" : "border-sky-800 bg-sky-900/80 hover:bg-sky-800"} 
+                                                    ${isSelected ? `!border-lime-400 !bg-opacity-100 shadow-md` : ""} 
+                                                    ${isEntryHidden(subject) && !isSelected ? "opacity-30 grayscale" : ""}
+                                                    ${isSelected && subject.type === "P" ? "!bg-red-700" : ""} 
+                                                    ${isSelected && subject.type === "L" ? "!bg-fuchsia-700" : ""} 
+                                                    ${isSelected && subject.type === "C" ? "!bg-sky-700" : ""}
+                                                `}
+                                                                style={{
+                                                                    gridColumnStart: colStart,
+                                                                    gridColumnEnd: colStart + subject.duration,
+                                                                    gridRow: subject.visualRowIndex + 1
+                                                                }}
+
+                                                                onClick={(e) => {
+                                                                    if (isLongPress.current) return;
+                                                                    if (!isEntryHidden(subject)) {
+                                                                        pickClass(subject);
+                                                                    }
+                                                                }}
+
+                                                                onContextMenu={(e) => {
+                                                                    e.preventDefault();
+                                                                    setTooltip({
+                                                                        x: e.clientX,
+                                                                        y: e.clientY,
+                                                                        teacher: subject.teacherFull,
+                                                                        room: subject.roomId,
+                                                                        week: subject.week,
+                                                                        teacherLogin: subject.teacherLogin,
+                                                                        isTouch: false
+                                                                    });
+                                                                }}
+
+                                                                onTouchStart={(e) => touchHandlers.onTouchStart(e, subject)}
+                                                                onTouchEnd={touchHandlers.onTouchEnd}
+                                                                onTouchMove={touchHandlers.onTouchMove}
+
+
+                                                            >
+                                                                <div className="pl-0.5 py-0.5 pr-2 flex flex-col h-full">
+
+                                                                    <div className="flex justify-between items-start">
+                                                                        <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] text-white ${subjectColors[subject.abbreviation]} ${selectedSubjects.has(subject.abbreviation)}`}>
+                                                                            {subject.abbreviation}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-mono opacity-70" title="Kapacita">{subject.capacity}</span>
+                                                                        <span className="font-mono opacity-70">{subject.type}</span>
+                                                                    </div>
+                                                                    <div className="flex-1 flex items-center justify-between w-full pl-1">
+                                                                        <span className="flex-1 font-semibold truncate text-center" title={subject.teacher}>{subject.teacher}</span>
+                                                                        {subject.week === 'S' && <span className="flex-shrink-0 ml-1 w-4 h-4 rounded-full bg-orange-600 text-[10px] flex items-center justify-center font-bold text-white shadow-sm ring-1 ring-orange-800" title="Sudý týden">S</span>}
+                                                                        {subject.week === 'L' && <span className="flex-shrink-0 ml-1 w-4 h-4 rounded-full bg-teal-600 text-[10px] flex items-center justify-center font-bold text-white shadow-sm ring-1 ring-teal-800" title="Lichý týden">L</span>}
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="h-14 w-full shrink-0"></div>
+                            </div>
+                            <div style={{ width: TABLE_WIDTH === TABLE_MIN_WIDTH ? 20 : 0 }} className="shrink-0"></div>
+                        </div>
+                    </div>
+                    {tooltip && (
+                        <>
+                            <div onClick={closeTooltip} style={{
+                                position: 'fixed',
+                                inset: 0,
+                                zIndex: 95,
+                                backgroundColor: '#00000022',
+                                cursor: 'default',
+                                touchAction: 'none',
+                                backdropFilter: 'blur(0.5px)',
+                                WebkitBackdropFilter: 'blur(0.5px)',
+                                animation: isClosing ? 'fadeOut 0.1s ease-out forwards' : 'fadeIn 0.2s ease-out forwards'
+                            }} />
+                            <div ref={tooltipRef} style={{
+                                position: 'fixed',
+                                left: Math.max(10, Math.min(tooltip.isTouch ? tooltip.x - 150 : tooltip.x + 15, window.innerWidth - 310)),
+                                backgroundColor: '#1f2937', // Tmavě šedá (ladí s designem)
+                                border: '1px solid #4b5563',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                zIndex: 100, // Aby bylo nad vším ostatním
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
+                                color: 'white',
+                                width: '300px',
+                                pointerEvents: 'auto', // Aby šlo kliknout na zavírací křížek
+                                touchAction: 'none',
+                                animation: isClosing ? 'modalOut 0.1s ease-in forwards' : 'modalIn 0.2s ease-out forwards'
+                            }}>
+                                {tooltip.week && tooltip.week !== 'ALL' && (
+                                    <>
+                                        <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Výuka</div>
+                                        <div className="text-sm font-medium">{tooltip.week === 'S' ? 'Sudý týden' : 'Lichý týden'}</div>
+                                        <div className="mt-3"></div>
+                                    </>
+                                )}
+                                <div className="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wider">Vyučující</div>
+                                <div className="text-sm font-medium">
+                                    {tooltip.teacherLogin ? (
+                                        <a href={`https://profily.vsb.cz/${tooltip.teacherLogin.split(',')[0].trim()}`} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
+                                            {tooltip.teacher} <Icon name="external-link-alt" className="text-[10px] ml-1 opacity-70" />
+                                        </a>
+                                    ) : tooltip.teacher}
+                                </div>
+
+                                <div className="font-bold text-xs text-gray-400 mt-3 mb-1 uppercase tracking-wider">Místnost</div>
+                                <div className="text-sm font-medium">
+                                    {tooltip.roomUrl ? (
+                                        <a href={tooltip.roomUrl} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 underline decoration-sky-400/50 hover:decoration-sky-300">
+                                            {tooltip.room} <Icon name="external-link-alt" className="text-[10px] ml-1 opacity-70" />
+                                        </a>
+                                    ) : tooltip.room}
+                                </div>
+
+
+                                {/* Tlačítko pro zavření */}
+                                <button
+                                    onClick={closeTooltip}
+                                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
+                                >
+                                    <Icon name="times" className="text-xs" />
+                                </button>
+                            </div>
+                        </>
+                    )}
+
+                    {notification && (
+                        <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
+                    )}
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById("root"));
+root.render(<App />);

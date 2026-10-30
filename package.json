@@ -1,0 +1,28 @@
+{
+  "name": "vsb-timetable-picker",
+  "version": "1.0.0",
+  "description": "Vytvořte si na VŠB-TUO rozvrh s předstihem.",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.min.css --minify",
+    "build": "node build.mjs",
+    "dev": "node dev.mjs"
+  },
+  "keywords": [
+    "vsb",
+    "timetable",
+    "picker"
+  ],
+  "author": "Kuba799500",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.2",
+    "html-to-image": "^1.11.11",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "web-haptics": "^0.0.6"
+  }
+}
+
