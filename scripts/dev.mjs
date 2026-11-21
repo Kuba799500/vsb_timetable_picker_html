@@ -3,10 +3,12 @@ import http from "node:http";
 import path from "node:path";
 import { execSync } from "node:child_process";
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const ROOT = process.cwd();
 const DIST = path.join(ROOT, "dist");
 const SRC = path.join(ROOT, "src");
+
+const PUBLIC = path.join(ROOT, "public");
 
 // MIME types
 const MIME_TYPES = {
@@ -23,7 +25,7 @@ const MIME_TYPES = {
 function runBuild() {
     try {
         console.log("🔄 Rebuilding...");
-        execSync("node build.mjs", { stdio: "inherit" });
+        execSync("node scripts/build.mjs", { stdio: "inherit" });
     } catch (err) {
         console.error("❌ Build error:", err.message);
     }
@@ -60,15 +62,21 @@ server.listen(PORT, () => {
     console.log(`👀 Watching src/ for changes...\n`);
 });
 
-// Watch src/
+// Watch src/ and public/
 let debounceTimer = null;
-fs.watch(SRC, { recursive: true }, (eventType, filename) => {
-    if (filename) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            console.log(`\n📝 Change detected in src/${filename}`);
-            runBuild();
-        }, 150);
-    }
+const scheduleRebuild = (label) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        console.log(`\n📝 Change detected in ${label}`);
+        runBuild();
+    }, 150);
+};
+fs.watch(SRC, { recursive: true }, (_eventType, filename) => {
+    if (filename) scheduleRebuild(`src/${filename}`);
 });
+if (fs.existsSync(PUBLIC)) {
+    fs.watch(PUBLIC, { recursive: true }, (_eventType, filename) => {
+        if (filename) scheduleRebuild(`public/${filename}`);
+    });
+}
 

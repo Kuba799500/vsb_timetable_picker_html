@@ -2,11 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+    overflow-y: scroll;
+}
+
 body {
     background-color: #242424;
     color: rgba(255, 255, 255, 0.87);
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    overflow-y: scroll;
 }
 
 #root {
@@ -34,9 +37,94 @@ body {
     background: #777;
 }
 
-.modal-overlay {
-    background-color: rgba(0, 0, 0, 0.75);
+dialog:modal {
+    overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background-color: rgba(0, 0, 0, 0);
     backdrop-filter: blur(0.25rem);
+    transition-property: background-color, display, overlay;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+}
+
+dialog {
+    opacity: 0;
+    max-height: 90vh;
+    max-height: calc(100dvh - 2rem);
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+}
+
+dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    dialog {
+        transform: scale(0.95);
+    }
+}
+
+dialog[open]:where(:not([data-closing])) {
+    opacity: 1;
+}
+
+@starting-style {
+    dialog[open]:where(:not([data-closing])) {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    dialog[open]:where(:not([data-closing])) {
+        transform: scale(1);
+    }
+
+    @starting-style {
+        dialog[open]:where(:not([data-closing])) {
+            transform: scale(0.95);
+        }
+    }
+}
+
+dialog[open]:where(:not([data-closing]))::backdrop {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+@starting-style {
+    dialog[open]:where(:not([data-closing]))::backdrop {
+        background-color: rgba(0, 0, 0, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    dialog,
+    dialog::backdrop {
+        transition-duration: 0.1s;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .spinner-spin {
+        animation: spin 1s linear infinite;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes fadeIn {
@@ -95,4 +183,3 @@ body {
 .shake {
     animation: shake 0.2s ease-in-out 0s 2;
 }
-

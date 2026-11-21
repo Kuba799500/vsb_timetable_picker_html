@@ -7,6 +7,7 @@ const baseProps = {
     strokeWidth: "2",
     strokeLinecap: "round",
     strokeLinejoin: "round",
+    "aria-hidden": "true",
     style: { display: "inline-block", verticalAlign: "-0.125em", width: "1em", height: "1em" }
 };
 
@@ -21,7 +22,7 @@ export const Icon = ({ name, className = "" }) => {
             );
         case "circle-notch":
             return (
-                <svg {...baseProps} strokeWidth="2.5" className={`animate-spin ${className}`}>
+                <svg {...baseProps} strokeWidth="2.5" className={`spinner-spin ${className}`}>
                     <path d="M12 2a10 10 0 0 1 10 10" />
                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
                 </svg>
@@ -154,4 +155,3 @@ export const Icon = ({ name, className = "" }) => {
             return null;
     }
 };
-
